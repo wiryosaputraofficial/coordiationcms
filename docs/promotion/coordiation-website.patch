@@ -1,0 +1,132 @@
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -4,6 +4,7 @@
+ import HeaderActions from "@/app/_components/HeaderActions";
+ import NpmDownloadsStat from "./_components/NpmDownloadsStat";
+ import FullstackIntro from "./_components/FullstackIntro";
++import CMSIntro from "./_components/CMSIntro";
+ import AnimatedNumber from "./_components/AnimatedNumber";
+ import SolarIcon from "./_components/SolarIcon";
+ import ThemeCarousel, { type ThemeCarouselSlide } from "./_components/ThemeCarousel";
+@@ -260,6 +261,7 @@
+           <Link href="/discussions">Discuss</Link>
+           <Link href="/components">Components</Link>
+           <Link href="/themes">Themes</Link>
++          <Link href="/cms">CMS</Link>
+           <Link href="/icons">Icons</Link>
+           <Link href="/docs">Docs</Link>
+         </nav>
+@@ -336,6 +338,8 @@
+       </section>
+ 
+       <FullstackIntro />
++
++      <CMSIntro />
+ 
+       <ThemeCarousel slides={themeCarouselSlides} />
+ 
+--- a/app/_components/MobileNav.tsx
++++ b/app/_components/MobileNav.tsx
+@@ -12,6 +12,7 @@
+   ["Discussions", "/discussions"],
+   ["Components", "/components"],
+   ["Themes", "/themes"],
++  ["CMS", "/cms"],
+   ["Shop", "https://shop.coordiation.com/"],
+   ["Icons", "/icons"],
+   ["Release Check", "/release-check"],
+--- a/app/seo.ts
++++ b/app/seo.ts
+@@ -82,6 +82,7 @@
+ }
+ 
+ export const STATIC_INDEXABLE_ROUTES = [
++  "/cms",
+   "/",
+   "/blogs",
+   "/blogs/why-ai-agents-need-product-contracts",
+--- /dev/null
++++ b/app/cms/page.tsx
+@@ -0,0 +1,47 @@
++import type { Metadata } from "next";
++import Link from "../_components/SiteLink";
++import HeaderActions from "../_components/HeaderActions";
++import SolarIcon from "../_components/SolarIcon";
++import { createSeoMetadata } from "../seo";
++import styles from "./showcase.module.css";
++
++export const metadata: Metadata = createSeoMetadata({
++  path: "/cms",
++  title: "Coordiation CMS — Your content. Your themes. Your space.",
++  description: "Explore Coordiation CMS: a self-hosted publishing workspace with a block editor, SEO controls, OpenAI writing assistance, and editable native themes. See real admin screenshots and the live public preview.",
++});
++
++const screens = [
++  { id: "dashboard", image: "admin-dashboard", label: "01 / YOUR WORKSPACE", title: "Everything starts here.", copy: "An overview of your posts, pages, media, comments, and active theme. One sidebar connects the whole publishing workflow.", alt: "Coordiation CMS dashboard with content counts, recent content, and sidebar navigation" },
++  { id: "editor", image: "admin-editor", label: "02 / WRITE & PUBLISH", title: "Make room for your next story.", copy: "Compose posts and pages with structured blocks. Review the SEO meter, edit search metadata, and use OpenAI for drafts and suggestions when connected.", alt: "Post editor with paragraph and heading blocks, AI writing button, and live SEO meter" },
++  { id: "homepage", image: "admin-homepage", label: "03 / MAKE IT YOURS", title: "Your homepage, in your hands.", copy: "Edit Teraform’s 13 homepage sections, from headlines and images to contact details. Set colors, typography, entrance animations, and image parallax.", alt: "Teraform homepage editor with section navigation and editable hero content" },
++  { id: "themes", image: "admin-themes", label: "04 / A NATIVE THEME SYSTEM", title: "One CMS. Different expressions.", copy: "Preview and switch themes, edit their source, and import or export native theme packages. Create your own variants for clients or distribution.", alt: "Coordiation CMS theme management screen with included theme previews and installation controls" },
++];
++
++export default function CMSShowcase() {
++  return <main className={styles.page}>
++    <header className="managed-header site-header">
++      <Link className="brand" href="/" aria-label="Coordiation home"><img src="/coordiation-logo.png" alt="" /><span>Coordiation</span><span className="brand-product">CMS</span></Link>
++      <nav aria-label="Main navigation"><Link href="/">Home</Link><a href="#inside">Inside the CMS</a><a href="#teraform">Teraform</a><Link href="/docs/installation/using-fullstack">Fullstack</Link></nav>
++      <HeaderActions><a className="header-cta" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Live preview <SolarIcon name="arrow-to-top-right" size={15} /></a></HeaderActions>
++    </header>
++    <section className={styles.hero}>
++      <p className={styles.eyebrow}><span className={styles.dot} /> INTRODUCING COORDIATION CMS · EARLY PREVIEW</p>
++      <h1>Your content.<br />Your themes.<br /><em>Your space.</em></h1>
++      <div className={styles.heroBottom}><p>A publishing home built with Coordiation Fullstack. Write stories, shape your website, and make your next theme your own.</p><div className={styles.actions}><a className="button button-dark" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Open live preview <SolarIcon name="arrow-to-top-right" size={17} /></a><a className="button button-light" href="#inside">Explore the admin <SolarIcon name="arrow-down" size={17} /></a></div></div>
++      <div className={styles.tags}><span>Self-hosted</span><span>Posts & pages</span><span>Native themes</span><span>SEO + AI writing</span></div>
++    </section>
++    <section id="inside" className={styles.inside}>
++      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>A LOOK INSIDE</p><h2>From the first draft<br />to your next launch.</h2></div><p>Real screenshots of the current CMS, using sample content. Take a closer look at the tools behind your website.</p></div>
++      <nav className={styles.screenNav} aria-label="Screenshot gallery">{screens.map(s=><a key={s.id} href={`#${s.id}`}>{s.id === "homepage" ? "Homepage editor" : s.id === "editor" ? "Post editor & SEO" : s.title === "Everything starts here." ? "Dashboard" : "Themes"}<SolarIcon name="arrow-down" size={14} /></a>)}</nav>
++      <div className={styles.screenGrid}>{screens.map(s=><article id={s.id} className={styles.screen} key={s.id}><div className={styles.screenCopy}><p className={styles.eyebrow}>{s.label}</p><h3>{s.title}</h3><p>{s.copy}</p></div><a className={styles.imageLink} href={`/cms/${s.image}.png`} target="_blank" rel="noopener noreferrer" aria-label={`Open full-size screenshot: ${s.alt}`}><img src={`/cms/${s.image}.png`} width="1265" height="712" alt={s.alt} loading="lazy" /><span>View full size <SolarIcon name="arrow-to-top-right" size={15} /></span></a></article>)}</div>
++    </section>
++    <section id="teraform" className={styles.theme}>
++      <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>MEET TERAFORM</p><h2>Designed to be<br />made your own.</h2></div><p>A creative studio theme with an editable homepage, matching blog and article layouts, and configurable motion. Teraform is one of the included native CMS themes.</p></div>
++      <a className={styles.themeImage} href="/cms/teraform-homepage.png" target="_blank" rel="noopener noreferrer" aria-label="Open full-size Teraform homepage screenshot"><img src="/cms/teraform-homepage.png" width="1265" height="712" alt="Teraform homepage with editorial typography and orange and green sculptural artwork" loading="lazy" /></a>
++      <p className={styles.caption}>Teraform theme shown with sample content. The live site may use a different active theme.</p>
++    </section>
++    <section className={styles.closing}><p className={styles.eyebrow}>EXPLORE THE CURRENT BUILD</p><h2>See it in action.</h2><p>The public website is ready to explore. Browse the source and follow development on GitHub.</p><div className={styles.actions}><a className="button button-dark" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Visit live preview <SolarIcon name="arrow-to-top-right" size={17} /></a><a className="button button-light" href="https://github.com/wiryosaputraofficial/coordiationcms" target="_blank" rel="noopener noreferrer">View on GitHub <SolarIcon name="arrow-to-top-right" size={17} /></a></div><p className={styles.note}>Version 0.1 preview. Built on Coordiation Fullstack alpha. Uses native Coordiation CMS themes; WordPress PHP themes and plugins are not compatible. OpenAI writing requires your own API key.</p></section>
++    <footer className={styles.footer}><Link className="brand" href="/"><img src="/coordiation-logo.png" alt="" /><span>Coordiation</span></Link><span>Made for stories. Built with Coordiation.</span><Link href="/docs/installation/using-fullstack">Explore Fullstack <SolarIcon name="arrow-right" size={16} /></Link></footer>
++  </main>;
++}
+--- /dev/null
++++ b/app/cms/showcase.module.css
+@@ -0,0 +1,18 @@
++.page{background:var(--paper);color:var(--ink)}
++.hero,.inside,.theme,.closing{padding:clamp(48px,7vw,100px) clamp(24px,6vw,88px)}
++.eyebrow{font:500 11px/1.5 var(--font-geist-mono),monospace;letter-spacing:.08em;text-transform:uppercase;margin:0 0 24px;display:flex;align-items:center;gap:10px}
++.dot{width:7px;height:7px;border-radius:50%;background:#ea5b34}
++.hero{background:var(--soft);border-bottom:1px solid var(--line)}
++.hero h1{font-size:clamp(58px,9vw,132px);line-height:.98;letter-spacing:-.07em;font-weight:600;margin:36px 0 42px}.hero h1 em{font-style:normal;color:#777872}
++.heroBottom{display:flex;align-items:end;justify-content:space-between;gap:32px}.heroBottom>p{max-width:470px;margin:0;font-size:18px;line-height:1.7;color:#62635e}
++.actions{display:flex;flex-wrap:wrap;gap:12px}.actions>a{white-space:normal;text-align:center;min-height:48px}
++.tags{display:flex;gap:20px;flex-wrap:wrap;margin-top:44px;font:11px var(--font-geist-mono),monospace;color:#63645e}.tags>span+span{border-left:1px solid #ccc;padding-left:20px}
++.sectionHeading{display:flex;gap:48px;align-items:end;justify-content:space-between;margin-bottom:36px}.sectionHeading h2,.closing h2{font-size:clamp(36px,4.6vw,66px);line-height:1.05;letter-spacing:-.055em;margin:0;font-weight:600}.sectionHeading>p{max-width:400px;line-height:1.75;color:var(--muted);margin:0}
++.screenNav{display:flex;gap:8px;flex-wrap:wrap;margin:32px 0 48px}.screenNav a{display:flex;align-items:center;gap:16px;padding:12px 18px;border:1px solid var(--line);border-radius:6px;font-size:13px}.screenNav a:hover{background:var(--soft);border-color:#777}
++.screenGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}.screen{min-width:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;scroll-margin-top:100px;background:var(--soft)}.screen:first-child{grid-column:1/-1;display:grid;grid-template-columns:.7fr 1.3fr;align-items:center}.screenCopy{padding:32px}.screenCopy .eyebrow{color:var(--muted);margin-bottom:16px}.screenCopy h3{font-size:clamp(23px,2.4vw,34px);font-weight:600;letter-spacing:-.045em;line-height:1.15;margin:0 0 18px}.screenCopy>p:last-child{font-size:14px;line-height:1.8;color:#686963;margin:0;max-width:49ch}.screen:last-child{grid-column:1/-1;display:grid;grid-template-columns:.7fr 1.3fr;align-items:center}
++.imageLink{display:block;background:#e7e7e3;border-top:1px solid var(--line);padding:16px}.imageLink img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:5px}.imageLink>span{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:11px;color:#60615b;padding:13px 0 0}.imageLink:hover>span{color:#000}.screen:first-child .imageLink,.screen:last-child .imageLink{border-top:0;border-left:1px solid var(--line)}
++.theme{background:#151613;color:#fff;scroll-margin-top:70px}.theme .sectionHeading>p{color:#a9aba3}.themeImage{display:block;overflow:hidden;border:1px solid #40423a;border-radius:12px}.themeImage img{display:block;width:100%;height:auto}.caption{font-size:12px;line-height:1.7;color:#a9aba3;margin:20px 0 0}
++.closing{text-align:center;border-bottom:1px solid var(--line)}.closing .eyebrow,.closing .actions{justify-content:center}.closing>p:not(.eyebrow){max-width:530px;margin:24px auto;line-height:1.75;color:var(--muted)}.closing .note{font-size:12px;max-width:650px!important}.footer{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:32px clamp(24px,6vw,88px);font-size:12px}.footer>span{color:var(--muted)}.footer>a:last-child{display:flex;gap:12px;align-items:center}
++.page a:focus-visible{outline:2px solid #e85f37;outline-offset:5px} .inside,.theme{scroll-margin-top:76px}
++@media(max-width:850px){.heroBottom,.sectionHeading{flex-direction:column;align-items:start;gap:24px}.heroBottom>p,.sectionHeading>p{max-width:560px}.screenGrid{grid-template-columns:1fr}.screen:first-child,.screen:last-child{display:block;grid-column:auto}.screen:first-child .imageLink,.screen:last-child .imageLink{border-left:0;border-top:1px solid var(--line)}.footer{flex-wrap:wrap}}
++@media(max-width:480px){.hero h1{font-size:58px}.tags{gap:12px}.tags>span+span{padding-left:12px}.screenCopy{padding:24px}.screenNav{margin-bottom:28px}.screenNav a{flex:1 1 44%;font-size:12px;padding:12px}.imageLink{padding:10px}.actions{width:100%}.actions>a{flex:1 1 100%}.footer{align-items:start;flex-direction:column}}
+--- /dev/null
++++ b/app/_components/CMSIntro.tsx
+@@ -0,0 +1,7 @@
++import Link from "./SiteLink";
++import SolarIcon from "./SolarIcon";
++import styles from "./CMSIntro.module.css";
++
++export default function CMSIntro() {
++  return <section className={styles.section} aria-labelledby="cms-heading"><div className={styles.copy}><p className={styles.eyebrow}>BUILT WITH COORDIATION · CMS PREVIEW</p><h2 id="cms-heading">A home for<br />your next story.</h2><p>Meet Coordiation CMS. Write posts, shape pages, and customize native themes in one publishing workspace.</p><div className={styles.links}><Link className="button button-dark" href="/cms">Explore the CMS <SolarIcon name="arrow-right" size={16} /></Link><a href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Live preview <SolarIcon name="arrow-to-top-right" size={16} /></a></div><p className={styles.note}>Early preview · Real admin screenshots · Self-hosted</p></div><Link className={styles.image} href="/cms#inside" aria-label="Explore screenshots inside Coordiation CMS"><img src="/cms/admin-dashboard.png" alt="Coordiation CMS dashboard with its content management sidebar and publishing overview" width="1265" height="712" loading="lazy" /><span>STEP INSIDE THE CMS <SolarIcon name="arrow-to-top-right" size={16} /></span></Link></section>;
++}
+--- /dev/null
++++ b/app/_components/CMSIntro.module.css
+@@ -0,0 +1 @@
++.section{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(32px,5vw,80px);align-items:center;padding:clamp(48px,7vw,100px) clamp(24px,5vw,80px);border-bottom:1px solid var(--line);background:var(--soft)}.copy,.image{min-width:0}.eyebrow{font:500 11px/1.6 var(--font-geist-mono),monospace;letter-spacing:.06em;margin:0 0 24px;color:#64655e}.copy h2{font-size:clamp(38px,4.8vw,70px);line-height:1.04;letter-spacing:-.06em;font-weight:600;margin:0}.copy>p:not(.eyebrow){font-size:16px;line-height:1.8;color:var(--muted);max-width:44ch;margin:24px 0}.links{display:flex;align-items:center;gap:24px;flex-wrap:wrap}.links>a{display:inline-flex;align-items:center;gap:12px;font-size:14px}.copy .note{font-size:11px!important;margin-bottom:0!important}.image{display:block;padding:16px;background:#e7e7e3;border:1px solid #d4d4ce;border-radius:12px}.image img{width:100%;height:auto;display:block;border-radius:5px;border:1px solid #d5d5d0}.image span{display:flex;align-items:center;justify-content:space-between;font:10px var(--font-geist-mono),monospace;letter-spacing:.08em;padding:16px 0 0}.section a:focus-visible{outline:2px solid #e85f37;outline-offset:5px}@media(max-width:800px){.section{grid-template-columns:1fr}.copy>p:not(.eyebrow){max-width:60ch}}@media(max-width:480px){.image{padding:10px}.links{gap:20px}}
