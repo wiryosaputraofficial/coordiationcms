@@ -1,3 +1,5 @@
+import { card, field, switchField } from "./ui.js";
+import { analyzeSEO } from "../shared/seo.js";
 import { icon } from "./icons.js";
 import { initializeComponents } from "./components.js";
 initializeComponents();
@@ -352,6 +354,13 @@ function readEditor() {
   }));
   return b;
 }
+function updateSEO() {
+  const container = $("#seo-analysis");
+  if (!container || !editor) return;
+  const expanded = container.querySelector("details")?.open;
+  const result = analyzeSEO(readEditor(), site.title);
+  container.innerHTML = `<div class="seo-score-row"><strong>${result.score}<small>/100</small></strong><span>${result.label}</span></div><meter class="seo-meter" min="0" max="100" low="50" high="80" optimum="100" value="${result.score}" aria-label="SEO readiness">${result.score} out of 100</meter><p class="field-hint">Editorial guidance, not a ranking guarantee.</p><div class="seo-search-preview"><span class="eyebrow">Search preview</span><span class="seo-preview-url">/${esc(result.slug || "your-page")}</span><strong>${esc(result.title || "Your page title")}</strong><p>${esc(result.description || "Add an excerpt to describe this page in search results.")}</p></div><p class="field-hint">${result.indexable ? "Published and public: eligible for search indexing." : "This content is not public yet. Search engines cannot index a draft or private preview."}</p><details class="seo-details" ${expanded ? "open" : ""}><summary>Review ${result.checks.filter((c) => !c.pass && c.applicable !== false).length} suggestions</summary><ul class="seo-checks">${result.checks.map((c) => `<li class="${c.applicable === false ? "seo-neutral" : c.pass ? "seo-pass" : "seo-improve"}"><strong>${c.applicable === false ? "—" : c.pass ? "✓" : "○"} ${esc(c.label)}</strong><p>${esc(c.detail)}</p></li>`).join("")}</ul></details>`;
+}
 function paintBlocks(blocks) {
   $("#blocks").innerHTML = blocks
     .map(
@@ -389,6 +398,7 @@ function paintBlocks(blocks) {
       }),
     ),
   );
+  updateSEO();
 }
 async function renderEditor(id, type = "post") {
   const [result, terms] = await Promise.all([
@@ -422,7 +432,7 @@ async function renderEditor(id, type = "post") {
       "Bring your ideas together, one block at a time.",
       `<span id="save-status" class="muted">${id ? "Saved" : "New draft"}</span>${id ? `<a class="button" href="/${esc(p.slug)}?preview=1" target="_blank" rel="noopener">${icon("eye")} Preview</a>` : ""}${button("Save", "save-post", "primary", "check")}`,
     ) +
-    `${result.autosave ? '<div class="inline-alert">An unsaved autosave is available. <button class="button small" data-action="recover-autosave">Recover autosave</button></div>' : ""}<form id="post-form"><div class="editor-layout"><div class="editor-canvas"><label class="sr-only" for="post-title">Title</label><input name="title" id="post-title" class="title-input" placeholder="Add a title…" value="${esc(p.title)}" required maxlength="250"><label class="sr-only" for="post-excerpt">Excerpt</label><textarea id="post-excerpt" name="excerpt" class="excerpt-input" placeholder="A short introduction for your readers…">${esc(p.excerpt)}</textarea><div id="blocks" class="block-list"></div><button type="button" class="block-add" data-action="add-block">${icon("plus")} Add a block</button></div><aside class="editor-sidebar"><section class="panel"><div class="panel-head"><h2>Publishing</h2>${icon("settings")}</div><div class="panel-body"><label>Status<select name="status">${Object.entries(
+    `${result.autosave ? '<div class="inline-alert">An unsaved autosave is available. <button class="button small" data-action="recover-autosave">Recover autosave</button></div>' : ""}<form id="post-form"><div class="editor-layout"><div class="editor-canvas"><label class="sr-only" for="post-title">Title</label><input name="title" id="post-title" class="title-input" placeholder="Add a title…" value="${esc(p.title)}" required maxlength="250"><label class="sr-only" for="post-excerpt">Excerpt</label><textarea id="post-excerpt" name="excerpt" class="excerpt-input" placeholder="A short introduction for your readers…">${esc(p.excerpt)}</textarea><div id="blocks" class="block-list"></div><button type="button" class="block-add" data-action="add-block">${icon("plus")} Add a block</button></div><aside class="editor-sidebar"><section class="panel seo-panel"><div class="panel-head"><h2>SEO meter</h2>${icon("spark")}</div><div class="panel-body" id="seo-analysis"></div></section><section class="panel"><div class="panel-head"><h2>Publishing</h2>${icon("settings")}</div><div class="panel-body"><label>Status<select name="status">${Object.entries(
       statusNames,
     )
       .filter(
@@ -437,7 +447,7 @@ async function renderEditor(id, type = "post") {
       )
       .join(
         "",
-      )}</select></label><label>Visibility<select name="visibility"><option value="public">Public</option><option value="private" ${p.visibility === "private" ? "selected" : ""}>Private (editor preview)</option></select></label><label>Publish date<input name="publish_at" type="datetime-local" value="${p.publish_at ? localDate(p.publish_at) : ""}"><p class="field-hint">Choose Scheduled to publish automatically. Time follows your device timezone.</p></label><label>Slug<input name="slug" value="${esc(p.slug)}" placeholder="post-title"></label><label class="check-label"><input name="comments_open" type="checkbox" ${p.comments_open ? "checked" : ""}>Allow comments</label></div></section><section class="panel"><div class="panel-head"><h2>Featured image</h2></div><div class="panel-body"><input type="hidden" name="featured_id" value="${esc(p.featured_id || "")}"><button type="button" class="cover-picker" data-action="pick-cover">${p.featured_id ? `<img src="/media/${p.featured_id}" alt="Featured image">` : `${icon("media")} Choose image`}</button><button type="button" class="button small ghost" data-action="clear-cover">Clear selection</button></div></section>${[
+      )}</select></label><label>Visibility<select name="visibility"><option value="public">Public</option><option value="private" ${p.visibility === "private" ? "selected" : ""}>Private (editor preview)</option></select></label><label>Publish date<input name="publish_at" type="datetime-local" value="${p.publish_at ? localDate(p.publish_at) : ""}"><p class="field-hint">Choose Scheduled to publish automatically. Time follows your device timezone.</p></label><label>Slug<input name="slug" value="${esc(p.slug)}" placeholder="post-title"></label><label class="check-label"><input name="comments_open" type="checkbox" ${p.comments_open ? "checked" : ""}>Show comments on this ${p.type === "page" ? "page" : "post"}</label><p class="field-hint">Site-wide comment settings also apply.</p></div></section><section class="panel"><div class="panel-head"><h2>Featured image</h2></div><div class="panel-body"><input type="hidden" name="featured_id" value="${esc(p.featured_id || "")}"><button type="button" class="cover-picker" data-action="pick-cover">${p.featured_id ? `<img src="/media/${p.featured_id}" alt="Featured image">` : `${icon("media")} Choose image`}</button><button type="button" class="button small ghost" data-action="clear-cover">Clear selection</button></div></section>${[
       "category",
       "tag",
     ]
@@ -468,6 +478,7 @@ async function renderEditor(id, type = "post") {
   paintBlocks(p.blocks);
   bind("#post-form", "submit", (e) => e.preventDefault());
   bind("#post-form", "input", () => {
+    updateSEO();
     dirty = true;
     $("#save-status").textContent = "Unsaved changes";
     clearTimeout(autosaveTimer);
@@ -744,17 +755,89 @@ async function renderSettings(customize = false) {
       "Set your site identity and how it works.",
       button("Save changes", "save-settings", "primary", "check"),
     ) +
-    `<form id="settings-form"><div class="settings-grid"><section class="panel form-panel"><h2>Site identity</h2><label>Site title<input name="title" value="${esc(site.title)}" required maxlength="150"></label><label>Tagline<input name="tagline" value="${esc(site.tagline)}" maxlength="300"><p class="field-hint">A short sentence that describes your site.</p></label><label>Footer text<input name="footer" value="${esc(site.footer)}" maxlength="300"></label><label>Accent color<input name="accent" type="color" value="${esc(site.accent)}"></label></section><div><section class="panel form-panel"><h2>Reading settings</h2><label>Homepage display<select name="homepage"><option value="">Latest posts</option>${pages.map((p) => `<option value="${p.id}" ${site.homepage === p.id ? "selected" : ""}>${esc(p.title)}</option>`).join("")}</select></label><label>Posts per page<input name="postsPerPage" type="number" min="1" max="50" value="${site.postsPerPage}"></label><label class="check-label"><input type="checkbox" name="allowComments" ${site.allowComments ? "checked" : ""}>Accept new comments</label><p class="field-hint">Comments are always moderated before appearing.</p></section><section class="panel form-panel secondary-panel"><h2>Preview</h2><p class="muted">Changes are applied after you save.</p><a class="button preview-action" href="/" target="_blank" rel="noopener">View site ↗</a></section></div></div></form>`;
-  bind("[data-action=save-settings]", "click", async () => {
+    `<form id="settings-form"><div class="settings-grid"><div class="component-stack">${card(
+      "Site identity",
+      "Give your publication a name and a recognizable style.",
+      field(
+        "setting-title",
+        "Site title",
+        `<input id="setting-title" name="title" value="${esc(site.title)}" required maxlength="150">`,
+      ) +
+        field(
+          "setting-tagline",
+          "Tagline",
+          `<input id="setting-tagline" name="tagline" value="${esc(site.tagline)}" maxlength="300" aria-describedby="setting-tagline-hint">`,
+          "A short sentence that describes your site.",
+        ) +
+        field(
+          "setting-footer",
+          "Footer text",
+          `<input id="setting-footer" name="footer" value="${esc(site.footer)}" maxlength="300">`,
+        ) +
+        field(
+          "setting-accent",
+          "Accent color",
+          `<div class="ui-color-control"><input id="setting-accent" name="accent" type="color" value="${esc(site.accent)}"><output id="accent-value" for="setting-accent">${esc(site.accent)}</output></div>`,
+        ),
+      icon("themes"),
+    )}
+      ${card("Site preview", "See your publication as your readers do.", `<p class="field-hint">Save your changes before opening the preview.</p><a class="button" href="/" target="_blank" rel="noopener">${icon("external")} View site</a>`, icon("eye"))}</div>
+      <div class="component-stack">${card(
+        "Reading",
+        "Choose what visitors see on your homepage.",
+        field(
+          "setting-homepage",
+          "Homepage display",
+          `<select id="setting-homepage" name="homepage"><option value="">Latest posts</option>${pages.map((p) => `<option value="${p.id}" ${site.homepage === p.id ? "selected" : ""}>${esc(p.title)}</option>`).join("")}</select>`,
+        ) +
+          field(
+            "setting-page-size",
+            "Posts per page",
+            `<input id="setting-page-size" name="postsPerPage" type="number" min="1" max="50" value="${site.postsPerPage}">`,
+          ),
+        icon("pages"),
+      )}
+      ${card(
+        "Discussion",
+        "Control comments across your posts and pages.",
+        switchField(
+          "allowComments",
+          "Accept new comments",
+          "New comments are reviewed before publication.",
+          site.allowComments,
+        ) +
+          switchField(
+            "hideComments",
+            "Hide comments everywhere",
+            "Hide comments and the form, and block new submissions. Existing comments are preserved.",
+            site.hideComments,
+          ),
+        icon("comments"),
+      )}</div></div></form>`;
+  const saveSettings = async (event) => {
+    event.preventDefault();
     const f = $("#settings-form");
     if (!f.reportValidity()) return;
-    const data = Object.fromEntries(new FormData(f));
-    data.postsPerPage = Number(data.postsPerPage);
-    data.allowComments = f.elements.allowComments.checked;
-    await api("settings", "POST", data);
-    site = await api("settings");
-    nav();
-    toast("Settings saved.");
+    const saveButton = $("[data-action=save-settings]");
+    if (saveButton.disabled) return;
+    saveButton.disabled = true;
+    try {
+      const data = Object.fromEntries(new FormData(f));
+      data.postsPerPage = Number(data.postsPerPage);
+      data.allowComments = f.elements.allowComments.checked;
+      data.hideComments = f.elements.hideComments.checked;
+      await api("settings", "POST", data);
+      site = await api("settings");
+      nav();
+      toast("Settings saved.");
+    } finally {
+      saveButton.disabled = false;
+    }
+  };
+  bind("[data-action=save-settings]", "click", saveSettings);
+  bind("#settings-form", "submit", saveSettings);
+  bind("#setting-accent", "input", (e) => {
+    $("#accent-value").textContent = e.currentTarget.value;
   });
 }
 async function renderMenus() {
@@ -975,18 +1058,26 @@ async function renderPlugins() {
 async function renderTools() {
   $("#workspace").innerHTML =
     heading("Tools", "Move your content and keep ownership of your data.") +
-    `<div class="settings-grid"><section class="panel form-panel"><h2>Import content</h2><p class="muted">Import posts and pages from WordPress or another Coordiation site.</p><form id="import-form" class="tools-form"><label>Format<select name="format"><option value="wordpress">WordPress WXR (.xml)</option><option value="coordiation">Coordiation (.json)</option></select></label><label>Export file<input type="file" id="import-file" accept=".xml,.json" required></label><p class="field-hint">Up to 200 posts per import and 700 KB per file. Duplicate slugs receive a suffix. Media attachments and user accounts are not imported.</p><button class="button primary preview-action">${icon("upload")} Import content</button></form></section><section class="panel form-panel"><h2>Export content</h2><p class="muted">Download your posts, pages, blocks, categories, and tags as JSON.</p><a class="button preview-action" href="/api/cms/export">${icon("download")} Download export</a><p class="field-hint">This is a content export. Complete database and media backups are available through the server backup command.</p></section></div>`;
+    `<div class="tools-grid">${card("Import content", "Bring posts and pages into your workspace.", `<form id="import-form" class="ui-form">${field("import-format", "Source format", `<select id="import-format" name="format"><option value="wordpress">WordPress WXR (.xml)</option><option value="coordiation">Coordiation (.json)</option></select>`)}${field("import-file", "Content file", `<input class="ui-file-input" type="file" id="import-file" accept=".xml,.json" required aria-describedby="import-file-hint">`, "Choose a JSON or XML export, up to 700 KB.")}<div class="ui-info"><strong>What gets imported</strong><p>Up to 200 posts or pages, with supported content and taxonomy. Duplicate slugs receive a suffix. Media files and user accounts are not imported.</p></div><button class="button primary" type="submit">${icon("upload")} Import content</button></form>`, icon("upload"))}
+      ${card("Export content", "Keep a portable copy of your published work and drafts.", `<div class="ui-info"><strong>Included in your export</strong><p>Posts, pages, blocks, categories, and tags in the Coordiation JSON format.</p></div><a class="button" href="/api/cms/export">${icon("download")} Download JSON export</a><p class="field-hint">This content export does not include media files or user accounts. Full database backups are managed on the server.</p>`, icon("download"))}</div>`;
   bind("#import-form", "submit", async (e) => {
     e.preventDefault();
     const f = $("#import-file").files[0];
     if (!f) return;
     if (f.size > 700000) throw new Error("File must be no larger than 700 KB.");
     const format = e.target.elements.format.value;
-    const result = await api("import", "POST", {
-      format,
-      content: await f.text(),
-    });
-    toast(`${result.count} items imported.`);
+    const submit = e.currentTarget.querySelector("button[type=submit]");
+    if (submit.disabled) return;
+    submit.disabled = true;
+    try {
+      const result = await api("import", "POST", {
+        format,
+        content: await f.text(),
+      });
+      toast(`${result.count} items imported.`);
+    } finally {
+      submit.disabled = false;
+    }
   });
 }
 function renderProfile() {

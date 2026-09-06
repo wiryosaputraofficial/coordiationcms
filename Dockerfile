@@ -5,6 +5,7 @@ RUN npm ci --ignore-scripts
 COPY coordiation.config.json ./
 COPY src ./src
 COPY public ./public
+COPY scripts/build-public-components.js ./scripts/build-public-components.js
 ARG CMS_ORIGIN=https://app.coordiation.com
 RUN node --input-type=module -e 'import fs from "node:fs"; const c=JSON.parse(fs.readFileSync("coordiation.config.json")); c.origin=process.env.CMS_ORIGIN || "https://app.coordiation.com"; fs.writeFileSync("coordiation.config.json",JSON.stringify(c));' && npm run build
 

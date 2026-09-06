@@ -17,3 +17,9 @@ The CMS uses a 4 px spacing scale, 40 px standard controls, 32 px compact contro
 The editor has a flexible content column and a 296 px settings column. Below 1050 px the content and settings stack, preventing a squeezed writing surface. Below 760 px the sidebar becomes a toggleable drawer. Filter controls remain native buttons with `aria-pressed`, rather than claiming a tab-panel relationship that the shared filtered table does not implement.
 
 Status colors are an intentional CMS adaptation. The rest of the interface follows Coordiation's monochrome palette and visible keyboard focus. Native dialog supplies keyboard focus containment and Escape dismissal.
+
+## Reusable forms and public components
+
+Tools and Settings are composed with the native `card`, `field`, and `switchField` parts in `src/client/ui.js`. Card structure follows the official Card/Header/Title/Description/Content recipes. Switch styling follows the registry's 44 × 24 px track and 20 px thumb, adapted to a native checkbox with `role="switch"` so form submission and keyboard interaction work without React. File inputs retain their native picker and validation with a styled file-selector button. Source recipes: `/r/card.json`, `/r/input.json`, `/r/select.json`, `/r/switch.json` on coordiation.com.
+
+Public pages use the server adapter `src/server/public-components.js`. Theme HTML is sanitized and enriched with component classes for cards, navigation, forms, labels, inputs, textareas and buttons. `scripts/build-public-components.js` compiles the official utility recipes with `@coordiation/css`; `src/styles/public.css` adds theme-aware layout and responsive sizing. The generated `/components.css` is separate from admin styles and requires no public JavaScript. The shared layer also applies to already-installed themes without replacing their saved manifests.

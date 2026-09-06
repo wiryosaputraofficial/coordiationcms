@@ -365,6 +365,7 @@ export function POST(request, { params }) {
         "accent",
         "postsPerPage",
         "allowComments",
+        "hideComments",
         "menu",
         "plugins",
         "homepage",
@@ -379,7 +380,10 @@ export function POST(request, { params }) {
           fail(400, "Invalid color.");
         if (k === "postsPerPage" && (!Number.isInteger(v) || v < 1 || v > 50))
           fail(400, "Posts per page must be between 1 and 50.");
-        if (k === "allowComments" && typeof v !== "boolean")
+        if (
+          ["allowComments", "hideComments"].includes(k) &&
+          typeof v !== "boolean"
+        )
           fail(400, "Invalid setting.");
         if (
           k === "homepage" &&

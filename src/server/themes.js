@@ -1,3 +1,4 @@
+import { componentAttributes } from "./public-components.js";
 import Handlebars from "handlebars";
 import sanitizeHtml from "sanitize-html";
 import { unzipSync, zipSync, strFromU8, strToU8 } from "fflate";
@@ -78,7 +79,7 @@ const allowedTags = [
   "details",
   "summary",
 ];
-export function cleanHTML(html) {
+export function cleanHTML(html, components = false) {
   return sanitizeHtml(html, {
     allowedTags,
     allowedAttributes: {
@@ -86,7 +87,15 @@ export function cleanHTML(html) {
       a: ["href", "target", "rel"],
       img: ["src", "alt", "width", "height", "loading"],
       form: ["action", "method"],
-      input: ["type", "name", "value", "placeholder", "required", "maxlength"],
+      input: [
+        "type",
+        "name",
+        "value",
+        "placeholder",
+        "required",
+        "maxlength",
+        "autocomplete",
+      ],
       textarea: ["name", "required", "maxlength"],
       button: ["type"],
       label: ["for"],
@@ -94,6 +103,7 @@ export function cleanHTML(html) {
     allowedSchemes: ["https", "http", "mailto"],
     allowProtocolRelative: false,
     transformTags: {
+      ...(components ? { "*": componentAttributes } : {}),
       a: sanitizeHtml.simpleTransform("a", { rel: "noopener noreferrer" }),
     },
   });
@@ -215,5 +225,5 @@ export function packTheme(theme) {
   return zipSync({ "theme.json": strToU8(JSON.stringify(theme, null, 2)) });
 }
 export function renderTheme(template, data) {
-  return cleanHTML(Handlebars.compile(template, { strict: false })(data));
+  return cleanHTML(Handlebars.compile(template, { strict: false })(data), true);
 }

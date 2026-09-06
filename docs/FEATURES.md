@@ -21,3 +21,9 @@ The target is a WordPress-style publishing workflow with a native Coordiation th
 Scheduled posts are made public on the first content/dashboard/RSS/sitemap request after their scheduled time. No background scheduler is installed. The original requested full feature parity remains future product work; this matrix is the scope of the delivered implementation.
 
 The public post list is bounded to 10,000 records per query. The import limit is 200 posts and 500 taxonomy terms per request. Upload limits reflect the framework's 1 MiB HTTP-body limit. SQLite is suitable for a bounded single-node CMS, not an assertion of WordPress-scale throughput.
+
+## SEO meter and discussion visibility
+
+Both post and page editors include a live SEO readiness meter, search preview, and a checklist for title length (including the site name), excerpt/meta description, slug, content, section headings, and block-image alt text. Scores are editorial guidance, not a prediction of rankings. There is no keyword research, crawler, or separate SEO metadata override. Featured-image alt text is edited in Media. Scores are calculated from the current editor content, so they update after editing, loading saved content, recovering an autosave, or restoring a revision.
+
+In **Settings → Discussion**, **Accept new comments** controls submissions while preserving visible approved comments. **Hide comments everywhere** hides the whole comment section and blocks submissions on every post/page without deleting comments. The per-post/page **Show comments** checkbox further controls that item. Disabling the global hide option restores the existing per-item behavior.

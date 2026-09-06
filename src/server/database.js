@@ -46,6 +46,7 @@ function initialize() {
     plugins: ["reading-time"],
     postsPerPage: 9,
     allowComments: true,
+    hideComments: false,
     homepage: "",
     footer: "Made with Coordiation CMS.",
   };

@@ -338,6 +338,72 @@ test("public comments remain moderated, then appear when approved", async () => 
   await api("comments", "POST", { id: comments[0].id, status: "approved" });
   assert.match(await (await req("/new-article")).text(), /A useful article/);
 });
+test("hide comments preserves moderation records and blocks submissions across posts and pages", async () => {
+  const page = await api("posts", "POST", {
+    type: "page",
+    title: "Discussion page",
+    slug: "discussion-page",
+    status: "published",
+    visibility: "public",
+    blocks: [],
+    categories: [],
+    tags: [],
+    comments_open: true,
+  });
+  const before = await api("comments");
+  await api("settings", "POST", { hideComments: true });
+  assert.equal((await api("settings")).hideComments, true);
+  for (const item of [post, page]) {
+    const html = await (await req("/" + item.slug)).text();
+    assert.doesNotMatch(
+      html,
+      /Conversation \(|Leave a comment|A useful article/,
+    );
+    const response = await fetch(base + "/api/comments", {
+      method: "POST",
+      headers: { Origin: origin },
+      body: new URLSearchParams({
+        postId: item.id,
+        name: "Reader",
+        email: "hidden@example.com",
+        body: "Blocked",
+      }),
+      redirect: "manual",
+    });
+    assert.equal(response.status, 403);
+  }
+  assert.deepEqual(await api("comments"), before);
+  assert.equal(
+    (await req("/api/cms/settings", "POST", { hideComments: "false" })).status,
+    400,
+  );
+  await api("settings", "POST", { hideComments: false, allowComments: false });
+  let html = await (await req("/new-article")).text();
+  assert.match(html, /A useful article/);
+  assert.doesNotMatch(html, /Leave a comment/);
+  await api("settings", "POST", { allowComments: true });
+  html = await (await req("/new-article")).text();
+  assert.match(html, /Leave a comment/);
+});
+test("public themes render reusable Coordiation form and card components", async () => {
+  for (const theme of builtInThemes) {
+    await api("themes", "POST", { id: theme.id });
+    const home = await (await req("/")).text();
+    assert.match(home, /pc-input/);
+    assert.match(home, /pc-button/);
+    assert.match(home, /pc-card/);
+    assert.match(home, /co-rounded-md/);
+    assert.match(home, /href="\/components.css"/);
+    const article = await (await req("/new-article")).text();
+    assert.match(article, /pc-textarea/);
+    assert.match(article, /comment-fields/);
+    assert.match(article, /name="postId"/);
+  }
+  await api("themes", "POST", { id: "folio" });
+  const css = await req("/components.css");
+  assert.equal(css.status, 200);
+  assert.match(await css.text(), /\.pc-input/);
+});
 test("administrator creates authors, contributors and subscribers", async () => {
   for (const role of ["author", "contributor", "subscriber"])
     await api("users", "POST", {

@@ -66,7 +66,7 @@ function document(
   site = settings(),
 ) {
   const origin = process.env.CMS_ORIGIN || "http://127.0.0.1:3118";
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — ${escape(site.title)}</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${escape(origin + path)}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="robots" content="${preview ? "noindex,nofollow" : "index,follow"}"><link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — ${escape(site.title)}</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${escape(origin + path)}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="robots" content="${preview ? "noindex,nofollow" : "index,follow"}"><link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
 }
 export function loadPublic(request, { params }) {
   return endpoint(() => {
@@ -123,9 +123,10 @@ export function loadPublic(request, { params }) {
           "SELECT name,body,created_at FROM comments WHERE post_id=? AND status='approved' ORDER BY created_at LIMIT 200",
         )
         .all(post.id);
-      const commentsHTML = post.comments_open
-        ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><strong>${escape(c.name)}</strong><p>${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<h3>Leave a comment</h3><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><label>Name<input name="name" required maxlength="100"></label><label>Email (not published)<input name="email" type="email" required maxlength="254"></label><label>Comments<textarea name="body" required maxlength="4000"></textarea></label><button type="submit">Submit comment</button></form>` : ""}</section>`
-        : "";
+      const commentsHTML =
+        post.comments_open && !site.hideComments
+          ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><strong>${escape(c.name)}</strong><p>${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<section class="comment-form"><h3>Leave a comment</h3><p>Join the conversation. Your email stays private, and comments are reviewed before publication.</p><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><div class="comment-fields"><label>Name<input autocomplete="name" name="name" required maxlength="100"></label><label>Email (not published)<input autocomplete="email" name="email" type="email" required maxlength="254"></label></div><label>Comment<textarea name="body" required maxlength="4000"></textarea></label><button type="submit">Submit comment</button></form></section>` : ""}</section>`
+          : "";
       return htmlResponse(
         document(
           post.title,
@@ -249,7 +250,8 @@ export function commentPOST(request) {
           "SELECT id,slug,comments_open FROM posts WHERE id=? AND status='published' AND visibility='public'",
         )
         .get(String(f.get("postId")));
-    if (!p || !p.comments_open || !settings().allowComments)
+    const site = settings();
+    if (!p || !p.comments_open || !site.allowComments || site.hideComments)
       fail(403, "Comments are closed.");
     const email = text(String(f.get("email") || ""), 254, true).toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail(400, "Invalid email.");
