@@ -1,3 +1,4 @@
+import { aiSettings, saveAISettings, generateWriting } from "./ai.js";
 import { getHomepage, saveHomepage, portableTheme } from "./homepage-store.js";
 import { randomUUID } from "node:crypto";
 import { XMLParser } from "fast-xml-parser";
@@ -140,6 +141,14 @@ export function GET(request, { params }) {
           )
           .all(),
       );
+    }
+    if (resource === "ai-settings") {
+      requireUser(request, admin);
+      return json(aiSettings());
+    }
+    if (resource === "ai-status") {
+      requireUser(request, writers);
+      return json(aiSettings());
     }
     if (resource === "homepage") {
       requireUser(request, admin);
@@ -304,6 +313,14 @@ export function POST(request, { params }) {
       return json({ ok: true, id: t.id });
     }
     const b = await body(request);
+    if (resource === "ai-settings") {
+      requireUser(request, admin);
+      return json(saveAISettings(b));
+    }
+    if (resource === "ai-write") {
+      const author = requireUser(request, writers);
+      return json(await generateWriting(b, author));
+    }
     if (resource === "homepage") {
       requireUser(request, admin);
       const row = db

@@ -13,7 +13,7 @@ The target is a WordPress-style publishing workflow with a native Coordiation th
 | Navigation   | Flat primary menu, reorder, local/HTTPS links                                                                                | Nested dropdown menus, multiple menu locations, widget editor                                                                   |
 | Users        | Five roles, user creation, role changes, profiles, password changes, sessions                                                | Email verification/recovery, MFA, SSO, user deletion/reassignment, self-registration                                            |
 | Comments     | Submission, moderation, spam/trash, basic rate limits                                                                        | Threaded replies, email notifications, advanced anti-spam                                                                       |
-| Discovery    | SSR, basic canonical and OG text metadata, sitemap, RSS, title/excerpt search, pagination                                    | Per-post SEO overrides, image sitemap, redirects, social-card generation, full-text indexing                                    |
+| Discovery    | SSR, per-item SEO controls, social cards, JSON-LD, sitemap, RSS, llms.txt, search, pagination                                | Image sitemap, redirects, social-image generation, full-text indexing                                                           |
 | Imports      | Native JSON posts/pages/taxonomies; WordPress WXR posts/pages with sanitized HTML                                            | WXR attachments, author mapping, WXR taxonomy/comments, other blog importers, full-site migration                               |
 | Operations   | Persistent SQLite, Docker, TLS proxy, health endpoint, backup and isolated restore scripts                                   | Multi-node hosting, multisite, one-click application upgrades, remote encrypted backup service                                  |
 | Localization | English UI and sample content                                                                                                | Language switcher, translated sites, multilingual publishing                                                                    |
@@ -24,9 +24,13 @@ The public post list is bounded to 10,000 records per query. The import limit is
 
 ## SEO meter and discussion visibility
 
-Both post and page editors include a live SEO readiness meter, search preview, and a checklist for title length (including the site name), excerpt/meta description, slug, content, section headings, and block-image alt text. Scores are editorial guidance, not a prediction of rankings. There is no keyword research, crawler, or separate SEO metadata override. Featured-image alt text is edited in Media. Scores are calculated from the current editor content, so they update after editing, loading saved content, recovering an autosave, or restoring a revision.
+Both post and page editors include a live SEO readiness meter, search preview, and a checklist for title length (including the site name), excerpt/meta description, slug, content, section headings, and block-image alt text. Scores are editorial guidance, not a prediction of rankings. Custom SEO titles, meta descriptions, canonical URLs, and noindex controls are available. There is no keyword research or crawler. Featured-image alt text is edited in Media. Scores are calculated from the current editor content, so they update after editing, loading saved content, recovering an autosave, or restoring a revision.
 
 In **Settings → Discussion**, **Accept new comments** controls submissions while preserving visible approved comments. **Hide comments everywhere** hides the whole comment section and blocks submissions on every post/page without deleting comments. The per-post/page **Show comments** checkbox further controls that item. Disabling the global hide option restores the existing per-item behavior.
+
+## AI writing
+
+OpenAI writing assistance supports outlines, drafts, body improvements, SEO titles, and meta descriptions in post/page editors. Administrators configure an encrypted API key in **Settings → AI writing**. Results require review and explicit application; they are never automatically published. A working API account and separate provider billing are required. See [SEO and AI](SEO-AND-AI.md).
 
 ## Teraform homepage and forms
 

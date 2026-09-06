@@ -28,10 +28,11 @@ Data lives in `data/cms.sqlite`. Override the location with `CMS_DATABASE`. `.en
 - Public comments with moderation, spam/trash states, and basic rate limiting.
 - Administrator, editor, author, contributor, and subscriber roles; profile editing and password changes.
 - Native theme installation, preview, activation, source editing, cloning, removal, and ZIP export.
-- Three sample themes: Folio, Gazette, and Mono. Ready-made ZIPs are in `theme-packages/`.
+- Four sample themes: Folio, Gazette, Mono, and Teraform. Ready-made ZIPs are in `theme-packages/`.
 - Flat navigation menus, site identity, accent color, static homepage selection, and reading settings.
 - Two built-in extensions: reading time and table of contents.
-- Server-rendered public pages, search, pagination, canonical metadata, RSS, and dynamic sitemap.
+- Server-rendered pages, SEO controls and meter, social metadata, article JSON-LD, RSS, sitemap, and an optional AI-readable content index.
+- OpenAI writing assistance with private connection settings and review before applying. See [SEO and AI](docs/SEO-AND-AI.md).
 - Native JSON content import/export and a bounded WordPress WXR content importer.
 - Docker/Traefik deployment, health checks, database backup and isolated restore commands.
 

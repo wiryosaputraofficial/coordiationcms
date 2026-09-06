@@ -41,6 +41,8 @@ docker compose exec -T cms node scripts/restore.js \
   /data/recovery/RESTORED.sqlite
 ```
 
+If OpenAI has been configured, the backup also creates a private `SNAPSHOT.sqlite.ai-key` file. Keep this alongside the snapshot and receipt in protected storage: the database contains the encrypted provider key, and the sidecar contains its encryption key. To restore AI access, copy the sidecar to `ai-encryption.key` in the directory containing the restored database, with mode 0600 and ownership matching the application user. Do not overwrite the live encryption key. Without the matching key, remove and reconnect OpenAI in Settings after recovery.
+
 Restore revokes copied sessions. Inspect the restored database before changing `CMS_DATABASE` and restarting this service. Never overwrite the live database with a raw copy while it is running.
 
 ## Administrator password recovery

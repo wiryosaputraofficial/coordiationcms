@@ -1,3 +1,5 @@
+import { llmsGET } from "./discovery.js";
+import { seoHead, fallbackDescription } from "./seo.js";
 import { homepageSlots } from "./homepage-render.js";
 import { getHomepage } from "./homepage-store.js";
 import { icon } from "../shared/icons.js";
@@ -18,8 +20,14 @@ import { renderTheme } from "./themes.js";
 const htmlResponse = (body, status = 200) => {
   const nonce = randomUUID();
   const motion = body.includes('data-homepage-motion="true"');
+  const enhanced =
+    motion || body.includes('<script type="application/ld+json">');
+  body = body.replaceAll(
+    '<script type="application/ld+json">',
+    `<script type="application/ld+json" nonce="${nonce}">`,
+  );
   return new Response(
-    motion
+    enhanced
       ? body
           .replace(
             "<head>",
@@ -27,7 +35,7 @@ const htmlResponse = (body, status = 200) => {
           )
           .replace(
             "</body>",
-            `<script nonce="${nonce}" src="/homepage-motion.js?v=2" defer></script></body>`,
+            `${motion ? `<script nonce="${nonce}" src="/homepage-motion.js?v=2" defer></script>` : ""}</body>`,
           )
       : body,
     {
@@ -36,7 +44,7 @@ const htmlResponse = (body, status = 200) => {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
-        "Content-Security-Policy": `default-src 'none'; ${motion ? `script-src 'nonce-${nonce}'; ` : ""}style-src 'self'; font-src 'self'; img-src 'self' https:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'`,
+        "Content-Security-Policy": `default-src 'none'; ${enhanced ? `script-src 'nonce-${nonce}'; ` : ""}style-src 'self'; font-src 'self'; img-src 'self' https:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'`,
         "Referrer-Policy": "strict-origin-when-cross-origin",
       },
     },
@@ -82,11 +90,13 @@ function document(
   path,
   preview = false,
   site = settings(),
+  seo = {},
 ) {
   const origin = process.env.CMS_ORIGIN || "http://127.0.0.1:3118";
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — ${escape(site.title)}</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${escape(origin + path)}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="robots" content="${preview ? "noindex,nofollow" : "index,follow"}"><link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css?v=teraform-2"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body${site.homepageMotion ? ` data-homepage-motion="true" data-animation="${escape(site.homepageMotion.animation)}" data-parallax="${escape(site.homepageMotion.parallax)}"` : ""}>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${seoHead({ title, description, path, site, preview, ...seo })}<link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css?v=seo-comments-3"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body${site.homepageMotion ? ` data-homepage-motion="true" data-animation="${escape(site.homepageMotion.animation)}" data-parallax="${escape(site.homepageMotion.parallax)}"` : ""}>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
 }
 export function loadPublic(request, { params, archive = false }) {
+  if (params?.slug === "llms.txt") return llmsGET();
   return endpoint(() => {
     const { db } = services();
     publishDue();
@@ -165,23 +175,34 @@ export function loadPublic(request, { params, archive = false }) {
         .all(post.id);
       const commentsHTML =
         post.comments_open && !site.hideComments
-          ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><strong>${escape(c.name)}</strong><p>${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<section class="comment-form"><h3 class="comment-heading">${icon("comments")} Leave a comment</h3><p>Join the conversation. Your email stays private, and comments are reviewed before publication.</p><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><div class="comment-fields"><label><span class="comment-label">${icon("person")} Name</span><input autocomplete="name" name="name" required maxlength="100"></label><label><span class="comment-label">${icon("email")} Email (not published)</span><input autocomplete="email" name="email" type="email" required maxlength="254"></label></div><label><span class="comment-label">${icon("edit")} Comment</span><textarea name="body" required maxlength="4000"></textarea></label><button type="submit">${icon("arrow")} Submit comment</button></form></section>` : ""}</section>`
+          ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><header class="comment-person"><span class="comment-avatar" aria-hidden="true">${escape(c.name.trim().slice(0, 1).toUpperCase())}</span><div><strong>${escape(c.name)}</strong><time datetime="${escape(c.created_at)}">${escape(new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }))}</time></div></header><p class="comment-text">${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<section class="comment-form"><h3 class="comment-heading">${icon("comments")} Leave a comment</h3><p>Join the conversation. Your email stays private, and comments are reviewed before publication.</p><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><div class="comment-fields"><label><span class="comment-label">${icon("person")} Name</span><input autocomplete="name" name="name" required maxlength="100"></label><label><span class="comment-label">${icon("email")} Email (not published)</span><input autocomplete="email" name="email" type="email" required maxlength="254"></label></div><label><span class="comment-label">${icon("edit")} Comment</span><textarea name="body" required maxlength="4000"></textarea></label><button type="submit">${icon("arrow")} Submit comment</button></form></section>` : ""}</section>`
           : "";
       return htmlResponse(
         document(
           post.title,
-          post.excerpt,
+          fallbackDescription(post),
           renderTheme(theme.single, {
             ...slots,
             site,
             menu: site.menu,
             post: viewPost(post, terms),
-            content: renderBlocks(post.blocks, site.plugins),
+            content:
+              (theme.single.includes("{{post.author}}")
+                ? ""
+                : `<p class="article-byline">By ${escape(viewPost(post, terms).author)} · <time datetime="${escape(post.publish_at || post.created_at)}">${escape(viewPost(post, terms).date)}</time></p>`) +
+              renderBlocks(post.blocks, site.plugins),
             comments: commentsHTML,
           }),
           url.pathname,
           preview || !isPublic,
           site,
+          {
+            post,
+            image: viewPost(post, terms).image,
+            imageAlt: viewPost(post, terms).imageAlt,
+            author: viewPost(post, terms).author,
+            path: site.homepage === post.id ? "/" : url.pathname,
+          },
         ),
       );
     }
@@ -242,6 +263,7 @@ export function loadPublic(request, { params, archive = false }) {
         url.pathname,
         preview || !!query || !!term,
         site,
+        { page },
       ),
     );
   });
@@ -331,7 +353,7 @@ export function sitemap() {
   publishDue();
   return services()
     .db.prepare(
-      "SELECT slug,updated_at FROM posts WHERE status='published' AND visibility='public'",
+      "SELECT slug,updated_at FROM posts WHERE status='published' AND visibility='public' AND COALESCE(json_extract(seo,'$.noindex'),0)=0",
     )
     .all()
     .map((p) => ({ params: { slug: p.slug }, lastModified: p.updated_at }));
@@ -342,7 +364,7 @@ export function feedGET() {
   publishDue();
   const posts = services()
     .db.prepare(
-      "SELECT * FROM posts WHERE status='published' AND visibility='public' AND type='post' ORDER BY COALESCE(publish_at,created_at) DESC LIMIT 30",
+      "SELECT * FROM posts WHERE status='published' AND visibility='public' AND type='post' AND COALESCE(json_extract(seo,'$.noindex'),0)=0 ORDER BY COALESCE(publish_at,created_at) DESC LIMIT 30",
     )
     .all();
   return new Response(

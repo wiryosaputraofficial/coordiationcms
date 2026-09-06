@@ -56,6 +56,11 @@ CREATE TABLE inquiries (id TEXT PRIMARY KEY, theme_id TEXT NOT NULL, kind TEXT N
         sql: teraformFeedbackIconMigration,
       },
       { id: "cms-007-teraform-blog-center", sql: teraformBlogCenterMigration },
+      {
+        id: "cms-008-seo-and-ai",
+        sql: `ALTER TABLE posts ADD COLUMN seo TEXT NOT NULL DEFAULT '{}';
+CREATE TABLE ai_config (id INTEGER PRIMARY KEY CHECK(id=1), base_url TEXT NOT NULL, model TEXT NOT NULL, encrypted_key TEXT NOT NULL) STRICT;`,
+      },
     ],
   });
   const auth = createPasswordAuth({
@@ -123,6 +128,7 @@ export function publicPost(row) {
   if (!row) return null;
   return {
     ...row,
+    seo: JSON.parse(row.seo || "{}"),
     blocks: JSON.parse(row.blocks),
     categories: JSON.parse(row.categories),
     tags: JSON.parse(row.tags),

@@ -905,6 +905,109 @@ test("theme authoring creates a sellable variant and enforces admin access", asy
     403,
   );
 });
+test("SEO overrides, structured data and discovery honor indexing controls", async () => {
+  const original = await api("posts?id=" + post.id);
+  const updated = await api("posts", "POST", {
+    ...original.post,
+    status: "published",
+    visibility: "public",
+    seo: {
+      title: "A search title for readers",
+      description:
+        "A concise description of the article and its purpose for readers.",
+      canonical: "",
+      noindex: false,
+    },
+  });
+  const response = await req("/" + updated.slug),
+    html = await response.text();
+  assert.match(html, /<title>A search title for readers —/);
+  assert.match(html, /property="og:url"/);
+  assert.match(html, /name="twitter:card" content="summary_large_image"/);
+  assert.match(
+    html,
+    /property="og:image" content="http:\/\/127.0.0.1:3118\/media\//,
+  );
+  const structured = JSON.parse(
+    html.match(
+      /<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/,
+    )[1],
+  );
+  assert.ok(
+    structured["@graph"].some(
+      (n) => n["@type"] === "BlogPosting" && n.author.name && n.dateModified,
+    ),
+  );
+  const pagination = await (await req("/blog?page=2")).text();
+  assert.match(
+    pagination,
+    /rel="canonical" href="http:\/\/127.0.0.1:3118\/blog\?page=2"/,
+  );
+  assert.match(
+    await (await req("/blog?q=article")).text(),
+    /content="noindex,follow"/,
+  );
+  const hidden = await api("posts", "POST", {
+    ...updated,
+    seo: { ...updated.seo, noindex: true },
+  });
+  assert.match(
+    await (await req("/" + hidden.slug)).text(),
+    /content="noindex,follow"/,
+  );
+  for (const path of ["/sitemap.xml", "/feed", "/llms.txt"])
+    assert.ok(!(await (await req(path)).text()).includes("/" + hidden.slug));
+  assert.equal(
+    (
+      await req("/api/cms/posts", "POST", {
+        ...hidden,
+        seo: { canonical: "javascript:alert(1)" },
+      })
+    ).status,
+    400,
+  );
+  post = await api("posts", "POST", { ...hidden, seo: original.post.seo });
+});
+test("AI setup is private, does not expose keys and requires a connection", async () => {
+  assert.equal(
+    (await req("/api/cms/ai-settings", "GET", undefined, "")).status,
+    401,
+  );
+  assert.equal(
+    (await req("/api/cms/ai-settings", "GET", undefined, authorCookie)).status,
+    403,
+  );
+  assert.equal(
+    (
+      await req("/api/cms/ai-write", "POST", {
+        task: "draft",
+        brief: "Write something",
+      })
+    ).status,
+    409,
+  );
+  const key = "test-key-not-a-real-provider-key";
+  const saved = await api("ai-settings", "POST", {
+    model: "gpt-5.4-mini",
+    apiKey: key,
+  });
+  assert.equal(saved.configured, true);
+  assert.ok(!JSON.stringify(saved).includes(key));
+  assert.ok(!JSON.stringify(await api("settings")).includes(key));
+  assert.equal(
+    (await api("ai-status", "GET", undefined, authorCookie)).configured,
+    true,
+  );
+  assert.equal(
+    (await req("/api/cms/ai-settings", "POST", { model: "bad model" })).status,
+    400,
+  );
+  const cleared = await api("ai-settings", "POST", {
+    model: "gpt-5.4-mini",
+    removeKey: true,
+  });
+  assert.equal(cleared.configured, false);
+});
 test("password change verifies current password and revokes sessions", async () => {
   const r = await req(
     "/api/cms/password",

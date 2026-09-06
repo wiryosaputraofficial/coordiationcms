@@ -1,3 +1,4 @@
+import { renderAISettings, openWritingAssistant } from "./ai.js";
 import { renderHomepageEditor } from "./homepage.js";
 import { card, field, switchField } from "./ui.js";
 import { analyzeSEO } from "../shared/seo.js";
@@ -343,6 +344,12 @@ function readEditor() {
     "featured_id",
   ])
     b[k] = f.elements[k]?.value || "";
+  b.seo = {
+    title: f.elements.seo_title.value,
+    description: f.elements.seo_description.value,
+    canonical: f.elements.seo_canonical.value,
+    noindex: f.elements.seo_noindex.checked,
+  };
   b.comments_open = f.elements.comments_open.checked;
   b.categories = $$("[name=categories]:checked", f).map((x) => x.value);
   b.tags = $$("[name=tags]:checked", f).map((x) => x.value);
@@ -364,7 +371,7 @@ function updateSEO() {
   if (!container || !editor) return;
   const expanded = container.querySelector("details")?.open;
   const result = analyzeSEO(readEditor(), site.title);
-  container.innerHTML = `<div class="seo-score-row"><strong>${result.score}<small>/100</small></strong><span>${result.label}</span></div><meter class="seo-meter" min="0" max="100" low="50" high="80" optimum="100" value="${result.score}" aria-label="SEO readiness">${result.score} out of 100</meter><p class="field-hint">Editorial guidance, not a ranking guarantee.</p><div class="seo-search-preview"><span class="eyebrow">Search preview</span><span class="seo-preview-url">/${esc(result.slug || "your-page")}</span><strong>${esc(result.title || "Your page title")}</strong><p>${esc(result.description || "Add an excerpt to describe this page in search results.")}</p></div><p class="field-hint">${result.indexable ? "Published and public: eligible for search indexing." : "This content is not public yet. Search engines cannot index a draft or private preview."}</p><details class="seo-details" ${expanded ? "open" : ""}><summary>Review ${result.checks.filter((c) => !c.pass && c.applicable !== false).length} suggestions</summary><ul class="seo-checks">${result.checks.map((c) => `<li class="${c.applicable === false ? "seo-neutral" : c.pass ? "seo-pass" : "seo-improve"}"><strong>${icon(c.applicable === false ? "divider" : c.pass ? "check" : "spark")} ${esc(c.label)}</strong><p>${esc(c.detail)}</p></li>`).join("")}</ul></details>`;
+  container.innerHTML = `<div class="seo-score-row"><strong>${result.score}<small>/100</small></strong><span>${result.label}</span></div><meter class="seo-meter" min="0" max="100" low="50" high="80" optimum="100" value="${result.score}" aria-label="SEO readiness">${result.score} out of 100</meter><p class="field-hint">Editorial guidance, not a ranking guarantee.</p><div class="seo-search-preview"><span class="eyebrow">Search preview</span><span class="seo-preview-url">/${esc(result.slug || "your-page")}</span><strong>${esc(result.title || "Your page title")}</strong><p>${esc(result.description || "Add an excerpt to describe this page in search results.")}</p></div><p class="field-hint">${result.indexable ? "Published and public: eligible for search indexing." : readEditor()?.seo?.noindex ? "Search indexing is disabled for this content." : "This content is not public yet. Search engines cannot index a draft or private preview."}</p><details class="seo-details" ${expanded ? "open" : ""}><summary>Review ${result.checks.filter((c) => !c.pass && c.applicable !== false).length} suggestions</summary><ul class="seo-checks">${result.checks.map((c) => `<li class="${c.applicable === false ? "seo-neutral" : c.pass ? "seo-pass" : "seo-improve"}"><strong>${icon(c.applicable === false ? "divider" : c.pass ? "check" : "spark")} ${esc(c.label)}</strong><p>${esc(c.detail)}</p></li>`).join("")}</ul></details>`;
 }
 function paintBlocks(blocks) {
   $("#blocks").innerHTML = blocks
@@ -435,9 +442,9 @@ async function renderEditor(id, type = "post") {
         ? "Edit " + (p.type === "page" ? "page" : "post")
         : "A new story starts here.",
       "Bring your ideas together, one block at a time.",
-      `<span id="save-status" class="muted">${id ? "Saved" : "New draft"}</span>${id ? `<a class="button" href="/${esc(p.slug)}?preview=1" target="_blank" rel="noopener">${icon("eye")} Preview</a>` : ""}${button("Save", "save-post", "primary", "check")}`,
+      `<span id="save-status" class="muted">${id ? "Saved" : "New draft"}</span>${id ? `<a class="button" href="/${esc(p.slug)}?preview=1" target="_blank" rel="noopener">${icon("eye")} Preview</a>` : ""}${button("AI writing", "ai-writing", "", "spark")}${button("Save", "save-post", "primary", "check")}`,
     ) +
-    `${result.autosave ? '<div class="inline-alert">An unsaved autosave is available. <button class="button small" data-action="recover-autosave">Recover autosave</button></div>' : ""}<form id="post-form"><div class="editor-layout"><div class="editor-canvas"><label class="sr-only" for="post-title">Title</label><input name="title" id="post-title" class="title-input" placeholder="Add a title…" value="${esc(p.title)}" required maxlength="250"><label class="sr-only" for="post-excerpt">Excerpt</label><textarea id="post-excerpt" name="excerpt" class="excerpt-input" placeholder="A short introduction for your readers…">${esc(p.excerpt)}</textarea><div id="blocks" class="block-list"></div><button type="button" class="block-add" data-action="add-block">${icon("plus")} Add a block</button></div><aside class="editor-sidebar"><section class="panel seo-panel"><div class="panel-head"><h2>SEO meter</h2>${icon("spark")}</div><div class="panel-body" id="seo-analysis"></div></section><section class="panel"><div class="panel-head"><h2>Publishing</h2>${icon("settings")}</div><div class="panel-body"><label>Status<select name="status">${Object.entries(
+    `${result.autosave ? '<div class="inline-alert">An unsaved autosave is available. <button class="button small" data-action="recover-autosave">Recover autosave</button></div>' : ""}<form id="post-form"><div class="editor-layout"><div class="editor-canvas"><label class="sr-only" for="post-title">Title</label><input name="title" id="post-title" class="title-input" placeholder="Add a title…" value="${esc(p.title)}" required maxlength="250"><label class="sr-only" for="post-excerpt">Excerpt</label><textarea id="post-excerpt" name="excerpt" class="excerpt-input" placeholder="A short introduction for your readers…">${esc(p.excerpt)}</textarea><div id="blocks" class="block-list"></div><button type="button" class="block-add" data-action="add-block">${icon("plus")} Add a block</button></div><aside class="editor-sidebar"><section class="panel seo-panel"><div class="panel-head"><h2>SEO meter</h2>${icon("spark")}</div><div class="panel-body" id="seo-analysis"></div><div class="panel-body"><label>SEO title<input name="seo_title" value="${esc(p.seo?.title || "")}" maxlength="120" placeholder="Use the article title"></label><label>Meta description<textarea name="seo_description" maxlength="320" placeholder="Use the excerpt">${esc(p.seo?.description || "")}</textarea></label><label>Canonical URL<input name="seo_canonical" value="${esc(p.seo?.canonical || "")}" type="url" placeholder="Automatic URL"></label><label class="check-label"><input type="checkbox" name="seo_noindex" ${p.seo?.noindex ? "checked" : ""}>Exclude from search indexing</label><p class="field-hint">The site name is added to the SEO title. Leave canonical empty unless this content belongs at another URL.</p></div></section><section class="panel"><div class="panel-head"><h2>Publishing</h2>${icon("settings")}</div><div class="panel-body"><label>Status<select name="status">${Object.entries(
       statusNames,
     )
       .filter(
@@ -541,6 +548,27 @@ async function renderEditor(id, type = "post") {
       dirty = true;
     });
   });
+  bind("[data-action=ai-writing]", "click", () =>
+    openWritingAssistant({
+      api,
+      toast,
+      openModal,
+      readEditor,
+      isAdmin: isAdmin(),
+      apply: (task, value, blocks) => {
+        const form = $("#post-form");
+        if (task === "title") form.elements.seo_title.value = value;
+        else if (task === "description")
+          form.elements.seo_description.value = value;
+        else
+          paintBlocks(
+            task === "improve" ? blocks : [...readEditor().blocks, ...blocks],
+          );
+        dirty = true;
+        updateSEO();
+      },
+    }),
+  );
   bind("[data-action=clear-cover]", "click", () => {
     $("#post-form").elements.featured_id.value = "";
     $("[data-action=pick-cover]").innerHTML = "Choose image";
@@ -558,6 +586,9 @@ async function renderEditor(id, type = "post") {
       "featured_id",
     ])
       if (form.elements[k]) form.elements[k].value = saved[k] || "";
+    for (const key of ["title", "description", "canonical"])
+      form.elements["seo_" + key].value = saved.seo?.[key] || "";
+    form.elements.seo_noindex.checked = saved.seo?.noindex === true;
     form.elements.comments_open.checked = !!saved.comments_open;
     form.elements.publish_at.value = saved.publish_at
       ? localDate(saved.publish_at)
@@ -762,9 +793,11 @@ async function renderSettings(customize = false) {
     heading(
       customize ? "Customize site" : "Settings",
       "Set your site identity and how it works.",
-      (homepageTheme
-        ? `<a class="button" href="#homepage/${homepageTheme.id}">${icon("edit")} Edit homepage</a>`
-        : "") + button("Save changes", "save-settings", "primary", "check"),
+      `<a class="button" href="#ai-settings">${icon("spark")} AI writing</a>` +
+        (homepageTheme
+          ? `<a class="button" href="#homepage/${homepageTheme.id}">${icon("edit")} Edit homepage</a>`
+          : "") +
+        button("Save changes", "save-settings", "primary", "check"),
     ) +
     `<form id="settings-form"><div class="settings-grid"><div class="component-stack">${card(
       "Site identity",
@@ -1159,6 +1192,7 @@ async function route() {
       customize: "Customize",
       homepage: "Homepage editor",
       inquiries: "Form inbox",
+      "ai-settings": "AI writing",
       terms: "Taxonomy",
       comments: "Comments",
       profile: "Profile",
@@ -1176,11 +1210,15 @@ async function route() {
         "customize",
         "homepage",
         "inquiries",
+        "ai-settings",
       ].includes(name) &&
       !isAdmin()
     )
       throw new Error("This page is only available to administrators.");
     switch (name) {
+      case "ai-settings":
+        await renderAISettings({ api, toast });
+        break;
       case "homepage":
         await renderHomepageEditor(id, {
           api,

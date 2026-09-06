@@ -66,6 +66,7 @@ function synchronize() {
       new: "posts",
       customize: "themes",
       homepage: "themes",
+      "ai-settings": "settings",
       terms: "posts",
     }[route] || route;
   const sidebar = document.querySelector(".sidebar");

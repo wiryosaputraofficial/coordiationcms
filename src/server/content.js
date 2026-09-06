@@ -42,6 +42,32 @@ export function validateBlocks(blocks) {
     return v;
   });
 }
+export function validatePostSEO(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    fail(400, "Invalid SEO settings.");
+  const canonical = text(value.canonical || "", 2000);
+  if (canonical) {
+    let url;
+    try {
+      url = new URL(canonical);
+    } catch {
+      fail(400, "Enter a valid canonical URL.");
+    }
+    if (url.protocol !== "https:" || url.username || url.password || url.hash)
+      fail(
+        400,
+        "Canonical URLs must use HTTPS without credentials or fragments.",
+      );
+  }
+  if (value.noindex !== undefined && typeof value.noindex !== "boolean")
+    fail(400, "Invalid indexing setting.");
+  return {
+    title: text(value.title || "", 120),
+    description: text(value.description || "", 320),
+    canonical,
+    noindex: value.noindex === true,
+  };
+}
 export function validatePost(b, user, old) {
   const type = b.type || old?.type || "post";
   if (!["post", "page"].includes(type)) fail(400, "Invalid content type.");
@@ -85,6 +111,7 @@ export function validatePost(b, user, old) {
     fail(400, "Media not found.");
   return {
     type,
+    seo: validatePostSEO(b.seo ?? old?.seo ?? {}),
     title: text(b.title, 250, true),
     slug: slug(b.slug || b.title),
     excerpt: text(b.excerpt || "", 1000),
@@ -169,6 +196,10 @@ export function savePost(b, user, inTransaction = false) {
         now,
         now,
       );
+    db.prepare("UPDATE posts SET seo=? WHERE id=?").run(
+      JSON.stringify(p.seo),
+      id,
+    );
   };
   if (inTransaction) persist();
   else db.transaction(persist);

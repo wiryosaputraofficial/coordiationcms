@@ -1,8 +1,8 @@
 /** Editorial checks, not a prediction of search-engine rankings. */
 export function analyzeSEO(post, siteTitle = "") {
-  const title = (post.title || "").trim();
-  const description = (post.excerpt || "").trim();
-  const slug = (post.slug || title)
+  const title = (post.seo?.title || post.title || "").trim();
+  const description = (post.seo?.description || post.excerpt || "").trim();
+  const slug = (post.slug || post.title || "")
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -38,7 +38,7 @@ export function analyzeSEO(post, siteTitle = "") {
       id: "description",
       label: "Meta description",
       pass: description.length >= 120 && description.length <= 160,
-      detail: `${description.length} characters. The excerpt becomes the meta description; aim for roughly 120–160 characters.`,
+      detail: `${description.length} characters. A custom description or the excerpt becomes the meta description; aim for roughly 120–160 characters.`,
       weight: 20,
     },
     {
@@ -97,6 +97,9 @@ export function analyzeSEO(post, siteTitle = "") {
     description,
     slug,
     words,
-    indexable: post.status === "published" && post.visibility === "public",
+    indexable:
+      post.status === "published" &&
+      post.visibility === "public" &&
+      !post.seo?.noindex,
   };
 }

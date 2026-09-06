@@ -2,6 +2,23 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { analyzeSEO } from "../src/shared/seo.js";
 
+test("SEO overrides do not change the generated content URL", () => {
+  const result = analyzeSEO({
+    title: "Original article title",
+    seo: {
+      title: "Search result title",
+      description: "Custom description",
+      noindex: true,
+    },
+    status: "published",
+    visibility: "public",
+  });
+  assert.equal(result.slug, "original-article-title");
+  assert.equal(result.title, "Search result title");
+  assert.equal(result.description, "Custom description");
+  assert.equal(result.indexable, false);
+});
+
 test("SEO analysis responds to meaningful title, description, content and structure changes", () => {
   const empty = analyzeSEO({ type: "post", blocks: [] }, "Studio");
   assert.equal(empty.score, 0);
