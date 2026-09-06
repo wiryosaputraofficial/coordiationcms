@@ -61,9 +61,14 @@ function synchronize() {
   }
   const route = location.hash.slice(1).split("/")[0] || "dashboard";
   const active =
-    { edit: "posts", new: "posts", customize: "themes", terms: "posts" }[
-      route
-    ] || route;
+    {
+      edit: "posts",
+      new: "posts",
+      customize: "themes",
+      homepage: "themes",
+      inquiries: "tools",
+      terms: "posts",
+    }[route] || route;
   const sidebar = document.querySelector(".sidebar");
   const toggle = document.querySelector("#mobile-toggle");
   if (sidebar && toggle) {

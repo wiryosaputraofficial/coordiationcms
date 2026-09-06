@@ -1,3 +1,5 @@
+import { homepageSlots } from "./homepage-render.js";
+import { getHomepage } from "./homepage-store.js";
 import { icon } from "../shared/icons.js";
 import { randomUUID } from "node:crypto";
 import { services, settings, publicPost, publishDue } from "./database.js";
@@ -87,6 +89,22 @@ export function loadPublic(request, { params }) {
       .get(site.activeTheme);
     if (!themeRow) fail(404, "Theme not found.");
     const theme = JSON.parse(themeRow.manifest);
+    const slots = homepageSlots(theme, site, preview, url);
+    if (theme.homepage && !params?.slug && (preview || !site.homepage)) {
+      const { data } = getHomepage(theme),
+        hero = data.sections.hero?.values || {},
+        brand = data.sections.header?.values.brand || site.title;
+      return htmlResponse(
+        document(
+          [hero.title, hero.highlight].filter(Boolean).join(" ") || brand,
+          hero.description || site.tagline,
+          renderTheme(theme.home, { site, ...slots }),
+          url.pathname,
+          preview,
+          { ...site, title: brand },
+        ),
+      );
+    }
     const terms = db.prepare("SELECT * FROM terms").all();
     let row = params?.slug
       ? db.prepare("SELECT * FROM posts WHERE slug=?").get(params.slug)
@@ -133,6 +151,7 @@ export function loadPublic(request, { params }) {
           post.title,
           post.excerpt,
           renderTheme(theme.single, {
+            ...slots,
             site,
             menu: site.menu,
             post: viewPost(post, terms),
@@ -213,8 +232,9 @@ export function themeCSS(request) {
       .get(id || s.activeTheme);
     if (!row) fail(404, "Theme not found.");
     const t = JSON.parse(row.manifest);
+    const design = t.homepage ? getHomepage(t).data.design : null;
     return new Response(
-      `@font-face{font-family:Geist;src:url(/fonts/geist-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}:root{--accent:${id ? t.accent : s.accent};--theme-bg:${t.background};--theme-fg:${t.foreground}}${t.css}`,
+      `@font-face{font-family:Geist;src:url(/fonts/geist-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}:root{--accent:${design?.accent || (id ? t.accent : s.accent)};--theme-bg:${design?.background || t.background};--theme-fg:${design?.foreground || t.foreground};--home-font:${design?.font === "serif" ? "Georgia,serif" : "Geist,Arial,sans-serif"}}${t.css}`,
       {
         headers: {
           "Content-Type": "text/css; charset=utf-8",

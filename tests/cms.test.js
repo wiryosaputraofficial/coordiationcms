@@ -246,7 +246,7 @@ test("media metadata and in-use deletion protection", async () => {
   );
   assert.match(await (await req("/new-article")).text(), /alt="Pixel"/);
 });
-test("three theme packages validate and round trip", () => {
+test("built-in theme packages validate and round trip", () => {
   for (const theme of builtInThemes) {
     assert.equal(theme.cmsVersion, "1");
     assert.ok(!("cmsVersionon" in theme));
@@ -415,6 +415,198 @@ test("public themes render reusable Coordiation form and card components", async
   assert.match(styles, /solar-linear\/letter\.svg/);
   assert.equal((await req("/icons/solar-linear/letter.svg")).status, 200);
 });
+test("homepage editor saves sections, ordering, images and design with conflict protection", async () => {
+  assert.equal(
+    (await req("/api/cms/homepage?id=teraform", "GET", undefined, ""))
+      .status,
+    401,
+  );
+  let home = await api("homepage?id=teraform");
+  assert.equal(home.active, false);
+  assert.equal(home.schema.sections.length, 13);
+  const data = structuredClone(home.data);
+  data.sections.hero.values.title = "A homepage edited in the CMS";
+  data.sections.hero.values.highlight = "Built for the next chapter";
+  data.sections.hero.items[0].image = "/media/" + media.id;
+  data.sections.hero.items[0].alt = "Homepage media preview";
+  data.sections.reviews.enabled = false;
+  data.sections.work.items[0].title = "<script>unsafe()</script>";
+  const work = data.order.indexOf("work"),
+    benefits = data.order.indexOf("benefits");
+  [data.order[work], data.order[benefits]] = [
+    data.order[benefits],
+    data.order[work],
+  ];
+  data.design.accent = "#dd6633";
+  const saved = await api("homepage", "POST", {
+    id: "teraform",
+    version: home.version,
+    data,
+  });
+  assert.equal(saved.version, 1);
+  assert.equal(
+    (
+      await req("/api/cms/homepage", "POST", {
+        id: "teraform",
+        version: 0,
+        data,
+      })
+    ).status,
+    409,
+  );
+  assert.doesNotMatch(
+    await (await req("/")).text(),
+    /A homepage edited in the CMS/,
+  );
+  let html = await (await req("/?preview=1&theme=teraform")).text();
+  assert.match(html, /A homepage edited in the CMS/);
+  assert.match(html, /Homepage media preview/);
+  assert.doesNotMatch(html, /class="fx-reviews"/);
+  assert.ok(html.indexOf('id="benefits"') < html.indexOf('id="work"'));
+  assert.doesNotMatch(html, /<script>unsafe/);
+  assert.match(html, /&lt;script&gt;/);
+  assert.match(html, /disabled/);
+  assert.match(
+    await (await req("/theme-style?preview=teraform")).text(),
+    /#dd6633/,
+  );
+  const bad = structuredClone(data);
+  bad.sections.hero.values.primaryUrl = "javascript:alert(1)";
+  assert.equal(
+    (
+      await req("/api/cms/homepage", "POST", {
+        id: "teraform",
+        version: 1,
+        data: bad,
+      })
+    ).status,
+    400,
+  );
+  bad.sections.hero.values.primaryUrl = "//evil.example";
+  assert.equal(
+    (
+      await req("/api/cms/homepage", "POST", {
+        id: "teraform",
+        version: 1,
+        data: bad,
+      })
+    ).status,
+    400,
+  );
+  assert.equal((await api("homepage?id=teraform")).version, 1);
+  const packed = await req("/api/cms/themes?export=teraform");
+  const exported = unpackTheme(new Uint8Array(await packed.arrayBuffer()));
+  assert.equal(exported.homepage.design.accent, "#dd6633");
+  assert.equal(
+    exported.homepage.sections
+      .find((s) => s.id === "hero")
+      .fields.find((f) => f.key === "title").default,
+    "A homepage edited in the CMS",
+  );
+  await api("themes", "POST", { id: "teraform" });
+  html = await (await req("/")).text();
+  assert.match(html, /A homepage edited in the CMS/);
+  assert.doesNotMatch(html, /Contact form preview/);
+  await api("themes", "POST", { id: "folio" });
+});
+test("homepage schema rejects oversized lists, duplicate order and unsafe section templates", async () => {
+  const home = await api("homepage?id=teraform");
+  for (const mutate of [
+    (d) => (d.order[1] = "header"),
+    (d) =>
+      (d.sections.hero.items = Array.from(
+        { length: 17 },
+        () => d.sections.hero.items[0],
+      )),
+    (d) => (d.design.accent = "red"),
+    (d) => (d.sections.hero.values.unknown = "bad"),
+  ]) {
+    const data = structuredClone(home.data);
+    mutate(data);
+    assert.equal(
+      (
+        await req("/api/cms/homepage", "POST", {
+          id: "teraform",
+          version: home.version,
+          data,
+        })
+      ).status,
+      400,
+    );
+  }
+  const theme = structuredClone(
+    builtInThemes.find((t) => t.id === "teraform"),
+  );
+  theme.homepage.sections[0].template =
+    "{{#each items}}{{#each items}}bad{{/each}}{{/each}}";
+  assert.throws(() => validTheme(theme), /Nested/);
+  assert.doesNotThrow(() =>
+    validTheme({
+      ...builtInThemes[0],
+      css: "html{scroll-behavior:smooth}.a > .b{color:red}",
+    }),
+  );
+  assert.throws(() =>
+    validTheme({ ...builtInThemes[0], css: "a{behavior:evil}" }),
+  );
+});
+test("contact and newsletter forms persist privately and honor active theme and visibility", async () => {
+  const submit = (values, requestOrigin = origin) =>
+    fetch(base + "/api/inquiries", {
+      method: "POST",
+      headers: { Origin: requestOrigin },
+      body: new URLSearchParams(values),
+      redirect: "manual",
+    });
+  const values = {
+    kind: "contact",
+    name: "Form reader",
+    email: "form-reader@example.com",
+    message: "A new design project",
+    service: "Website design",
+    budget: "Under $3,000",
+  };
+  assert.equal((await submit(values)).status, 400);
+  await api("themes", "POST", { id: "teraform" });
+  assert.equal((await submit(values, "https://evil.example")).status, 403);
+  assert.equal((await submit({ ...values, email: "invalid" })).status, 400);
+  assert.equal((await submit(values)).status, 303);
+  assert.equal(
+    (
+      await submit({
+        kind: "newsletter",
+        email: "subscriber-request@example.com",
+      })
+    ).status,
+    303,
+  );
+  const inbox = await api("inquiries");
+  assert.ok(
+    inbox.some(
+      (i) => i.message === "A new design project" && i.name === "Form reader",
+    ),
+  );
+  assert.ok(
+    inbox.some(
+      (i) =>
+        i.kind === "newsletter" && i.email === "subscriber-request@example.com",
+    ),
+  );
+  assert.equal(
+    (await req("/api/cms/inquiries", "GET", undefined, "")).status,
+    401,
+  );
+  assert.doesNotMatch(await (await req("/")).text(), /form-reader@example.com/);
+  const home = await api("homepage?id=teraform");
+  home.data.sections.contact.enabled = false;
+  await api("homepage", "POST", {
+    id: "teraform",
+    version: home.version,
+    data: home.data,
+  });
+  assert.equal((await submit(values)).status, 403);
+  await api("themes", "POST", { id: "folio" });
+});
 test("administrator creates authors, contributors and subscribers", async () => {
   for (const role of ["author", "contributor", "subscriber"])
     await api("users", "POST", {
@@ -441,6 +633,22 @@ test("administrator creates authors, contributors and subscribers", async () => 
   }
 });
 test("roles block settings, other authors content, pages and publishing", async () => {
+  assert.equal(
+    (
+      await req(
+        "/api/cms/homepage?id=teraform",
+        "GET",
+        undefined,
+        authorCookie,
+      )
+    ).status,
+    403,
+  );
+  assert.equal(
+    (await req("/api/cms/inquiries", "GET", undefined, authorCookie)).status,
+    403,
+  );
+
   assert.equal(
     (await req("/api/cms/settings", "GET", undefined, authorCookie)).status,
     403,

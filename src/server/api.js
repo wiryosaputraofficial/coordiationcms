@@ -1,3 +1,4 @@
+import { getHomepage, saveHomepage, portableTheme } from "./homepage-store.js";
 import { randomUUID } from "node:crypto";
 import { XMLParser } from "fast-xml-parser";
 import {
@@ -140,6 +141,32 @@ export function GET(request, { params }) {
           .all(),
       );
     }
+    if (resource === "homepage") {
+      requireUser(request, admin);
+      const row = db
+        .prepare("SELECT manifest FROM themes WHERE id=?")
+        .get(url.searchParams.get("id"));
+      if (!row) fail(404, "Theme not found.");
+      const theme = JSON.parse(row.manifest);
+      if (!theme.homepage)
+        fail(400, "This theme does not have a homepage editor.");
+      return json({
+        id: theme.id,
+        name: theme.name,
+        schema: theme.homepage,
+        ...getHomepage(theme),
+        active: settings().activeTheme === theme.id,
+        staticHomepage: !!settings().homepage,
+      });
+    }
+    if (resource === "inquiries") {
+      requireUser(request, admin);
+      return json(
+        db
+          .prepare("SELECT * FROM inquiries ORDER BY created_at DESC LIMIT 200")
+          .all(),
+      );
+    }
     if (resource === "settings") {
       requireUser(request, admin);
       return json(settings());
@@ -150,7 +177,7 @@ export function GET(request, { params }) {
         .prepare("SELECT manifest FROM themes WHERE id=?")
         .get(url.searchParams.get("id"));
       if (!row) fail(404, "Theme not found.");
-      return json(JSON.parse(row.manifest));
+      return json(portableTheme(JSON.parse(row.manifest)));
     }
     if (resource === "themes") {
       requireUser(request, admin);
@@ -159,7 +186,7 @@ export function GET(request, { params }) {
           .prepare("SELECT manifest FROM themes WHERE id=?")
           .get(url.searchParams.get("export"));
         if (!t) fail(404, "Theme not found.");
-        return new Response(packTheme(JSON.parse(t.manifest)), {
+        return new Response(packTheme(portableTheme(JSON.parse(t.manifest))), {
           headers: {
             "Content-Type": "application/zip",
             "Content-Disposition": `attachment; filename="${url.searchParams.get("export")}.zip"`,
@@ -172,8 +199,10 @@ export function GET(request, { params }) {
           .prepare("SELECT manifest FROM themes")
           .all()
           .map((r) => {
-            const { home, single, css, ...t } = JSON.parse(r.manifest);
-            return t;
+            const { home, single, css, homepage, ...t } = JSON.parse(
+              r.manifest,
+            );
+            return { ...t, hasHomepage: !!homepage };
           }),
       });
     }
@@ -275,6 +304,23 @@ export function POST(request, { params }) {
       return json({ ok: true, id: t.id });
     }
     const b = await body(request);
+    if (resource === "homepage") {
+      requireUser(request, admin);
+      const row = db
+        .prepare("SELECT manifest FROM themes WHERE id=?")
+        .get(b.id);
+      if (!row) fail(404, "Theme not found.");
+      const theme = JSON.parse(row.manifest);
+      if (!theme.homepage)
+        fail(400, "This theme does not have a homepage editor.");
+      try {
+        const saved = saveHomepage(theme, b.data, b.version);
+        log(u, `Updated homepage for ${theme.name}`);
+        return json(saved);
+      } catch (e) {
+        fail(e.status || 400, e.message);
+      }
+    }
     if (resource === "posts") {
       requireUser(request, writers);
       const post = savePost(b, u);
@@ -648,6 +694,18 @@ export function DELETE(request, { params }) {
           409,
           "This media is still used in content. Remove its references before deleting.",
         );
+      const mediaPath = "/media/" + b.id;
+      if (
+        db
+          .prepare(
+            "SELECT theme_id FROM theme_homepages WHERE instr(data,?) > 0 LIMIT 1",
+          )
+          .get(mediaPath) ||
+        db
+          .prepare("SELECT id FROM themes WHERE instr(manifest,?) > 0 LIMIT 1")
+          .get(mediaPath)
+      )
+        fail(409, "This image is used by a theme homepage.");
       db.prepare("DELETE FROM media WHERE id=?").run(b.id);
     } else if (r === "terms") {
       requireUser(request, editors);

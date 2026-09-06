@@ -1,3 +1,6 @@
+import { makeTeraformTheme } from "../themes/teraform.js";
+import { teraformCSS } from "../themes/teraform-style.js";
+import { validateHomepageSchema } from "../shared/homepage.js";
 import { icon } from "../shared/icons.js";
 import { componentAttributes } from "./public-components.js";
 import Handlebars from "handlebars";
@@ -60,6 +63,7 @@ export const builtInThemes = [
       css +
       ".site-logo img{filter:invert(1)}.post-card p,.lead{color:#acb3a7}button{color:#141714}.site-header,.hero,.post-card,footer{border-color:#3d4339}.hero h1{font-weight:900}.post-grid{gap:45px}.toc,pre{background:#262d24!important}",
   },
+  makeTeraformTheme(teraformCSS),
 ];
 const allowedTags = [
   ...sanitizeHtml.defaults.allowedTags,
@@ -79,6 +83,8 @@ const allowedTags = [
   "article",
   "details",
   "summary",
+  "fieldset",
+  "legend",
 ];
 export function cleanHTML(html, components = false) {
   return sanitizeHtml(html, {
@@ -96,12 +102,14 @@ export function cleanHTML(html, components = false) {
         "required",
         "maxlength",
         "autocomplete",
+        "checked",
+        "disabled",
       ],
       textarea: ["name", "required", "maxlength"],
-      button: ["type"],
+      button: ["type", "disabled"],
       label: ["for"],
     },
-    allowedSchemes: ["https", "http", "mailto"],
+    allowedSchemes: ["https", "http", "mailto", "tel"],
     allowProtocolRelative: false,
     transformTags: {
       ...(components ? { "*": componentAttributes } : {}),
@@ -137,15 +145,21 @@ export function validTheme(t) {
     if (!/^#[0-9a-f]{6}$/i.test(t[k]))
       throw new Error("Theme colors must use #RRGGBB.");
   if (
-    /url\s*\(|@import|expression\s*\(|[<>\\]|behavior\s*:|-moz-binding/i.test(
+    /url\s*\(|@import|expression\s*\(|[<\\]|(?:^|[;{])\s*behavior\s*:|-moz-binding/i.test(
       t.css,
     )
   )
     throw new Error(
       "Theme CSS cannot contain external URLs, escapes, or active code.",
     );
-  for (const k of ["home", "single"]) {
-    const ast = Handlebars.parse(t[k]);
+  if (t.homepage) validateHomepageSchema(t.homepage);
+  const templates = [
+    t.home,
+    t.single,
+    ...(t.homepage?.sections.map((s) => s.template) || []),
+  ];
+  for (const template of templates) {
+    const ast = Handlebars.parse(template);
     let nodes = 0;
     const inspect = (node, depth = 0, eachDepth = 0) => {
       if (depth > 30 || ++nodes > 12000)
@@ -189,7 +203,7 @@ export function validTheme(t) {
     };
     inspect(ast);
   }
-  return Object.fromEntries(
+  const result = Object.fromEntries(
     [
       "id",
       "name",
@@ -207,6 +221,10 @@ export function validTheme(t) {
       "css",
     ].map((k) => [k, t[k] || "sans"]),
   );
+  if (t.homepage) result.homepage = t.homepage;
+  if (JSON.stringify(result).length > 280000)
+    throw new Error("Theme is too large.");
+  return result;
 }
 export function unpackTheme(bytes) {
   const names = [];

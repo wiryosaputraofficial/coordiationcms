@@ -51,3 +51,15 @@ All HTML is served through a restrictive public-page CSP. Scripts, inline event 
 An existing theme can be edited through its source button. An installed ID cannot be overwritten by ZIP import; use source editing for updates or distribute a new ID. Theme previews show live CMS content, while the small library thumbnail is an illustrative card rather than a screenshot of arbitrary custom templates.
 
 The CMS does not issue license keys, process payments, enforce DRM, fetch remote theme updates, or provide a public marketplace. These services are separate from the installable theme format.
+
+## Editable homepages (Teraform)
+
+Choose **Themes → Teraform → Edit homepage** to edit every section, including images from Media, links, repeated cards, visibility, order, and colors/typography. Save before opening Preview. To publish the landing page, activate the theme and choose **Settings → Homepage → Theme homepage / latest posts**. A selected static page continues to take precedence on the live site. Header and footer remain at the edges of the layout.
+
+Themes can opt in with a `homepage` object containing `version: 1`, a `sections` array, and optional `design` defaults. Each section has a unique `id`, `label`, `template`, `fields`, optional `itemFields` and `items`, and optional `visible`. Fields contain `key`, `label`, `type`, and `default`; supported types are `text`, `textarea`, `url`, `image`, and `color`. Limits are 20 sections, 30 fields per group, and 16 items per section. Templates use escaped field names and one-level `{{#each items}}` loops; the same safety rules apply as for other templates.
+
+The renderer supplies `homepageContent`, `homepageHeader`, and `homepageFooter` HTML slots. Teraform renders the first on its home template and the latter two around articles. Per-theme settings are stored separately from templates and preserve defaults for newly added fields. Export and source cloning fold the current saved settings into package defaults, including colors, item content, section order, and visibility.
+
+ZIP packages still contain only `theme.json`. Uploaded media is not embedded; move referenced media separately or use stable HTTPS URLs when distributing a theme. Teraform's bundled `/theme-assets/teraform/` SVG artwork is included in this CMS release and uses original artwork, not assets from the reference site. The design takes inspiration from [the supplied reference](https://formix.framer.website/), with original branding, copy, and illustrations.
+
+Teraform contact and newsletter forms submit to the built-in inbox. Administrators read submissions from **Tools → Form inbox**. This does not send email or connect a mailing service. Custom theme authors must follow the form field contract in `src/server/inquiries.js`; only the active theme can accept submissions.

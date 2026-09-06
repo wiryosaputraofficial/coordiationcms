@@ -1,3 +1,4 @@
+import { renderHomepageEditor } from "./homepage.js";
 import { card, field, switchField } from "./ui.js";
 import { analyzeSEO } from "../shared/seo.js";
 import { icon } from "./icons.js";
@@ -139,6 +140,8 @@ async function confirmAction(title, message, fn) {
   );
 }
 function miniTheme(t, compact = false) {
+  if (t.id === "teraform" || t.hasHomepage)
+    return `<div class="mini-browser-bar"><i></i><i></i><i></i></div><div class="teraform-thumbnail"><div><span>TERAFORM ${icon("spark")}</span><h3>Your next<br>chapter.<br><em>Designed.</em></h3><p>Brand. Digital. Product.</p><b>Explore ${icon("external")}</b></div><img src="/theme-assets/teraform/ember.svg" alt="Teraform abstract artwork"></div>`;
   const id = ["folio", "gazette", "mono"].includes(t.id) ? t.id : "custom";
   return `<div class="mini-browser-bar"><i></i><i></i><i></i></div><div class="mini-site preview-${id}"><div class="mini-nav"><b>${esc(site.title)}</b><span>Journal &nbsp; About &nbsp; ${icon("external")}</span></div><h3>${id === "gazette" ? "Stories worth<br>staying for." : id === "mono" ? "Make room<br>for your ideas." : "A space for<br>your next story."}</h3><p>${compact ? "Ideas, stories, and things that matter." : esc(t.description || "Stories and creative work, in your own space.")}</p><div class="mini-lines"><span></span><span></span><span></span></div></div>`;
 }
@@ -674,7 +677,7 @@ async function renderThemes() {
       button("Create theme", "create-theme", "", "plus") +
         button("Install theme", "install-theme", "primary", "upload"),
     ) +
-    `<input type="file" id="theme-file" accept=".zip" hidden><div class="theme-grid">${data.items.map((t) => `<article class="theme-card ${t.id === data.active ? "is-active" : ""}">${miniTheme(t)}<div class="theme-card-body"><h2>${esc(t.name)}${t.id === data.active ? '<span class="badge published">Active</span>' : ""}</h2><p>${esc(t.description)}</p><div class="theme-card-meta">${esc(t.author)} · v${esc(t.version)} · ${esc(t.license)}</div><div class="heading-actions">${t.id === data.active ? '<a href="#customize" class="button small primary">Customize</a>' : `<button class="button small primary" data-activate="${t.id}">Activate</button>`}<a href="/?preview=1&theme=${t.id}" target="_blank" rel="noopener" class="button small">Preview ${icon("external")}</a><button class="icon-button" data-edit-theme="${t.id}" aria-label="Edit theme source">${icon("code")}</button><a href="/api/cms/themes?export=${t.id}" class="icon-button" aria-label="Export ${esc(t.name)}">${icon("download")}</a>${t.id !== data.active ? `<button class="icon-button" data-delete-theme="${t.id}" aria-label="Delete theme">${icon("trash")}</button>` : ""}</div></div></article>`).join("")}</div><p class="field-hint theme-format">Theme packages use the Coordiation CMS format (.zip containing theme.json). Export a theme to create and distribute your own variants.</p>`;
+    `<input type="file" id="theme-file" accept=".zip" hidden><div class="theme-grid">${data.items.map((t) => `<article class="theme-card ${t.id === data.active ? "is-active" : ""}">${miniTheme(t)}<div class="theme-card-body"><h2>${esc(t.name)}${t.id === data.active ? '<span class="badge published">Active</span>' : ""}</h2><p>${esc(t.description)}</p><div class="theme-card-meta">${esc(t.author)} · v${esc(t.version)} · ${esc(t.license)}</div><div class="heading-actions">${t.id === data.active ? '<a href="#customize" class="button small primary">Customize</a>' : `<button class="button small primary" data-activate="${t.id}">Activate</button>`} ${t.hasHomepage ? `<a href="#homepage/${t.id}" class="button small">${icon("edit")} Edit homepage</a>` : ""}<a href="/?preview=1&theme=${t.id}" target="_blank" rel="noopener" class="button small">Preview ${icon("external")}</a><button class="icon-button" data-edit-theme="${t.id}" aria-label="Edit theme source">${icon("code")}</button><a href="/api/cms/themes?export=${t.id}" class="icon-button" aria-label="Export ${esc(t.name)}">${icon("download")}</a>${t.id !== data.active ? `<button class="icon-button" data-delete-theme="${t.id}" aria-label="Delete theme">${icon("trash")}</button>` : ""}</div></div></article>`).join("")}</div><p class="field-hint theme-format">Theme packages use the Coordiation CMS format (.zip containing theme.json). Export a theme to create and distribute your own variants.</p>`;
   bind("[data-action=create-theme]", "click", () => editThemeSource(null));
   $$("[data-edit-theme]").forEach((el) =>
     bind(`[data-edit-theme="${el.dataset.editTheme}"]`, "click", () =>
@@ -743,6 +746,10 @@ async function editThemeSource(id) {
 }
 async function renderSettings(customize = false) {
   site = await api("settings");
+  const themes = await api("themes");
+  const homepageTheme = themes.items.find(
+    (t) => t.id === themes.active && t.hasHomepage,
+  );
   const pages = (await api("posts")).filter(
     (p) =>
       p.type === "page" &&
@@ -753,7 +760,9 @@ async function renderSettings(customize = false) {
     heading(
       customize ? "Customize site" : "Settings",
       "Set your site identity and how it works.",
-      button("Save changes", "save-settings", "primary", "check"),
+      (homepageTheme
+        ? `<a class="button" href="#homepage/${homepageTheme.id}">${icon("edit")} Edit homepage</a>`
+        : "") + button("Save changes", "save-settings", "primary", "check"),
     ) +
     `<form id="settings-form"><div class="settings-grid"><div class="component-stack">${card(
       "Site identity",
@@ -788,7 +797,7 @@ async function renderSettings(customize = false) {
         field(
           "setting-homepage",
           "Homepage display",
-          `<select id="setting-homepage" name="homepage"><option value="">Latest posts</option>${pages.map((p) => `<option value="${p.id}" ${site.homepage === p.id ? "selected" : ""}>${esc(p.title)}</option>`).join("")}</select>`,
+          `<select id="setting-homepage" name="homepage"><option value="">Theme homepage / latest posts</option>${pages.map((p) => `<option value="${p.id}" ${site.homepage === p.id ? "selected" : ""}>${esc(p.title)}</option>`).join("")}</select>`,
         ) +
           field(
             "setting-page-size",
@@ -1057,7 +1066,11 @@ async function renderPlugins() {
 }
 async function renderTools() {
   $("#workspace").innerHTML =
-    heading("Tools", "Move your content and keep ownership of your data.") +
+    heading(
+      "Tools",
+      "Move your content and keep ownership of your data.",
+      `<a class="button" href="#inquiries">${icon("email")} Form inbox</a>`,
+    ) +
     `<div class="tools-grid">${card("Import content", "Bring posts and pages into your workspace.", `<form id="import-form" class="ui-form">${field("import-format", "Source format", `<select id="import-format" name="format"><option value="wordpress">WordPress WXR (.xml)</option><option value="coordiation">Coordiation (.json)</option></select>`)}${field("import-file", "Content file", `<input class="ui-file-input" type="file" id="import-file" accept=".xml,.json" required aria-describedby="import-file-hint">`, "Choose a JSON or XML export, up to 700 KB.")}<div class="ui-info"><strong>What gets imported</strong><p>Up to 200 posts or pages, with supported content and taxonomy. Duplicate slugs receive a suffix. Media files and user accounts are not imported.</p></div><button class="button primary" type="submit">${icon("upload")} Import content</button></form>`, icon("upload"))}
       ${card("Export content", "Keep a portable copy of your published work and drafts.", `<div class="ui-info"><strong>Included in your export</strong><p>Posts, pages, blocks, categories, and tags in the Coordiation JSON format.</p></div><a class="button" href="/api/cms/export">${icon("download")} Download JSON export</a><p class="field-hint">This content export does not include media files or user accounts. Full database backups are managed on the server.</p>`, icon("download"))}</div>`;
   bind("#import-form", "submit", async (e) => {
@@ -1079,6 +1092,21 @@ async function renderTools() {
       submit.disabled = false;
     }
   });
+}
+async function renderInquiries() {
+  const items = await api("inquiries");
+  $("#workspace").innerHTML =
+    heading(
+      "Form inbox",
+      "Contact messages and newsletter requests received by your site.",
+      `<a class="button" href="#tools">${icon("back")} Tools</a>`,
+    ) +
+    (items.length
+      ? `<div class="component-stack">${items.map((item) => card(item.kind === "newsletter" ? "Newsletter request" : item.name, `${item.email} · ${time(item.created_at)}`, `<p class="inquiry-message">${esc(item.message || "This visitor requested newsletter updates.")}</p><p class="field-hint">${esc(JSON.parse(item.services).join(", "))}${item.budget ? " · " + esc(item.budget) : ""}</p>`, icon(item.kind === "newsletter" ? "email" : "comments"))).join("")}</div>`
+      : empty(
+          "No messages yet",
+          "Contact and newsletter submissions will appear here.",
+        ));
 }
 function renderProfile() {
   $("#workspace").innerHTML =
@@ -1132,6 +1160,8 @@ async function route() {
       edit: "Editor",
       new: "Editor",
       customize: "Customize",
+      homepage: "Homepage editor",
+      inquiries: "Form inbox",
       terms: "Taxonomy",
       comments: "Comments",
       profile: "Profile",
@@ -1147,11 +1177,26 @@ async function route() {
         "tools",
         "settings",
         "customize",
+        "homepage",
+        "inquiries",
       ].includes(name) &&
       !isAdmin()
     )
       throw new Error("This page is only available to administrators.");
     switch (name) {
+      case "homepage":
+        await renderHomepageEditor(id, {
+          api,
+          toast,
+          pickMedia,
+          setDirty: (value) => {
+            dirty = value;
+          },
+        });
+        break;
+      case "inquiries":
+        await renderInquiries();
+        break;
       case "posts":
         await renderPosts("post");
         break;

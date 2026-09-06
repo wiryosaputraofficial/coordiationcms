@@ -37,6 +37,11 @@ UPDATE themes SET manifest = json_set(manifest, '$.home', replace(json_extract(m
 UPDATE themes SET manifest = json_set(manifest, '$.home', replace(json_extract(manifest, '$.home'), '<a href="{{next}}">Next →</a>', '<a class="icon-link" href="{{next}}">Next <span class="icon co-icon co-icon-arrow" aria-hidden="true"></span></a>')) WHERE instr(json_extract(manifest, '$.home'), '<a href="{{next}}">Next →</a>') > 0;
 UPDATE themes SET manifest = json_set(manifest, '$.single', replace(json_extract(manifest, '$.single'), '<a href="/">← All stories</a>', '<a class="icon-link" href="/"><span class="icon co-icon co-icon-back" aria-hidden="true"></span> All stories</a>')) WHERE instr(json_extract(manifest, '$.single'), '<a href="/">← All stories</a>') > 0;`,
       },
+      {
+        id: "cms-004-theme-homepages",
+        sql: `CREATE TABLE theme_homepages (theme_id TEXT PRIMARY KEY REFERENCES themes(id) ON DELETE CASCADE, data TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1) STRICT;
+CREATE TABLE inquiries (id TEXT PRIMARY KEY, theme_id TEXT NOT NULL, kind TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, message TEXT NOT NULL, services TEXT NOT NULL, budget TEXT NOT NULL, created_at TEXT NOT NULL) STRICT;`,
+      },
     ],
   });
   const auth = createPasswordAuth({

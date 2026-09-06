@@ -17,14 +17,15 @@ export const publicRecipes = {
 export function componentAttributes(tagName, attributes) {
   const classes = (attributes.class || "").split(/\s+/);
   const kind =
-    tagName === "input" && attributes.type !== "hidden"
+    tagName === "input" &&
+    !["hidden", "checkbox", "radio"].includes(attributes.type)
       ? "input"
       : ["button", "textarea", "label", "form", "table"].includes(tagName)
         ? tagName
         : tagName === "nav"
           ? "navigation"
           : classes.some((c) =>
-                ["post-card", "comment", "comment-form"].includes(c),
+                ["post-card", "comment", "comment-form", "fx-card"].includes(c),
               )
             ? "card"
             : tagName === "a" && classes.includes("button")
