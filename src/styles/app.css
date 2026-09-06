@@ -1151,6 +1151,10 @@ td .subline {
   font-size: 13px;
 }
 .modal {
+  /* Restore native dialog centering after the global margin reset. */
+  position: fixed;
+  inset: 0;
+  margin: auto;
   border: 0;
   border-radius: 12px;
   padding: 0;
@@ -2486,7 +2490,7 @@ th:last-child:not(:first-child) {
 }
 .modal {
   width: 640px;
-  max-width: calc(100vw - 32px);
+  max-width: calc(100% - 32px);
   border-radius: 12px;
 }
 .modal-header {
@@ -2923,7 +2927,7 @@ th:last-child:not(:first-child) {
     padding: 0 16px 20px;
   }
   .modal {
-    max-width: calc(100vw - 24px);
+    max-width: calc(100% - 24px);
   }
   .modal .media-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
