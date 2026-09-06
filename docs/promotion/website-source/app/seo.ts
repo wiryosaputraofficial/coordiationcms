@@ -82,6 +82,7 @@ export function createSeoMetadata({ path, ...metadata }: SeoMetadataInput): Meta
 }
 
 export const STATIC_INDEXABLE_ROUTES = [
+  "/docs/installation/using-cms",
   "/cms",
   "/",
   "/blogs",

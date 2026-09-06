@@ -1,0 +1,128 @@
+--- a/app/cms/page.tsx
++++ b/app/cms/page.tsx
+@@ -4,6 +4,8 @@
+ import SolarIcon from "../_components/SolarIcon";
+ import { createSeoMetadata } from "../seo";
+ import styles from "./showcase.module.css";
++import CodeBlock from "../docs/_components/CodeBlock";
++import { CMS_VERSION, CMS_INSTALL_COMMANDS } from "./installation";
+ 
+ export const metadata: Metadata = createSeoMetadata({
+   path: "/cms",
+@@ -22,17 +24,18 @@
+   return <main className={styles.page}>
+     <header className="managed-header site-header">
+       <Link className="brand" href="/" aria-label="Coordiation home"><img src="/coordiation-logo.png" alt="" /><span>Coordiation</span><span className="brand-product">CMS</span></Link>
+-      <nav aria-label="Main navigation"><Link href="/">Home</Link><a href="#inside">Inside the CMS</a><a href="#teraform">Teraform</a><Link href="/docs/installation/using-fullstack">Fullstack</Link></nav>
++      <nav aria-label="Main navigation"><Link href="/">Home</Link><a href="#inside">Inside the CMS</a><a href="#teraform">Teraform</a><Link href="/docs/installation/using-cms">Installation</Link></nav>
+       <HeaderActions><a className="header-cta" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Live preview <SolarIcon name="arrow-to-top-right" size={15} /></a></HeaderActions>
+     </header>
+     <section className={styles.hero}>
+       <p className={styles.eyebrow}><span className={styles.dot} /> INTRODUCING COORDIATION CMS · EARLY PREVIEW</p>
+       <h1>Your content.<br />Your themes.<br /><em>Your space.</em></h1>
+-      <div className={styles.heroBottom}><p>A publishing home built with Coordiation Fullstack. Write stories, shape your website, and make your next theme your own.</p><div className={styles.actions}><a className="button button-dark" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Open live preview <SolarIcon name="arrow-to-top-right" size={17} /></a><a className="button button-light" href="#inside">Explore the admin <SolarIcon name="arrow-down" size={17} /></a></div></div>
++      <div className={styles.heroBottom}><p>A publishing home built with Coordiation Fullstack. Write stories, shape your website, and make your next theme your own.</p><div className={styles.actions}><a className="button button-dark" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Open live preview <SolarIcon name="arrow-to-top-right" size={17} /></a><a className="button button-light" href="#install">Install CMS <SolarIcon name="arrow-down" size={17} /></a></div></div>
+       <div className={styles.tags}><span>Self-hosted</span><span>Posts & pages</span><span>Native themes</span><span>SEO + AI writing</span></div>
+     </section>
+     <section id="inside" className={styles.inside}>
+       <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>A LOOK INSIDE</p><h2>From the first draft<br />to your next launch.</h2></div><p>Real screenshots of the current CMS, using sample content. Take a closer look at the tools behind your website.</p></div>
++      <div id="install" className={styles.install}><div><p className={styles.eyebrow}>AVAILABLE ON NPM · {CMS_VERSION} · MIT</p><h3>Start your own<br />publishing space.</h3><p>Use Node.js 22.18 or newer; Node.js 24 is recommended. Run these commands in a terminal to create a new site.</p><p>Then open <code>http://127.0.0.1:3118/login</code> on your computer and create your administrator with a password of at least 15 characters.</p><div className={styles.installLinks}><Link href="/docs/installation/using-cms">Full installation guide <SolarIcon name="arrow-right" size={16} /></Link><a href="https://www.npmjs.com/package/coordiation-cms" target="_blank" rel="noopener noreferrer">View on npm <SolarIcon name="arrow-to-top-right" size={16} /></a></div></div><div><CodeBlock title="Install and run Coordiation CMS" code={CMS_INSTALL_COMMANDS} /><p className={styles.installNote}>Choose a new directory. The initializer preserves existing folders. These commands start a local site; see the guide to deploy on your own domain.</p></div></div>
+       <nav className={styles.screenNav} aria-label="Screenshot gallery">{screens.map(s=><a key={s.id} href={`#${s.id}`}>{s.id === "homepage" ? "Homepage editor" : s.id === "editor" ? "Post editor & SEO" : s.title === "Everything starts here." ? "Dashboard" : "Themes"}<SolarIcon name="arrow-down" size={14} /></a>)}</nav>
+       <div className={styles.screenGrid}>{screens.map(s=><article id={s.id} className={styles.screen} key={s.id}><div className={styles.screenCopy}><p className={styles.eyebrow}>{s.label}</p><h3>{s.title}</h3><p>{s.copy}</p></div><a className={styles.imageLink} href={`/cms/${s.image}.jpg`} target="_blank" rel="noopener noreferrer" aria-label={`Open full-size screenshot: ${s.alt}`}><img src={`/cms/${s.image}.jpg`} width="1265" height="712" alt={s.alt} loading="lazy" /><span>View full size <SolarIcon name="arrow-to-top-right" size={15} /></span></a></article>)}</div>
+     </section>
+--- a/app/cms/showcase.module.css
++++ b/app/cms/showcase.module.css
+@@ -16,3 +16,6 @@
+ .page a:focus-visible{outline:2px solid #e85f37;outline-offset:5px} .inside,.theme{scroll-margin-top:76px}
+ @media(max-width:850px){.heroBottom,.sectionHeading{flex-direction:column;align-items:start;gap:24px}.heroBottom>p,.sectionHeading>p{max-width:560px}.screenGrid{grid-template-columns:1fr}.screen:first-child,.screen:last-child{display:block;grid-column:auto}.screen:first-child .imageLink,.screen:last-child .imageLink{border-left:0;border-top:1px solid var(--line)}.footer{flex-wrap:wrap}}
+ @media(max-width:480px){.hero h1{font-size:58px}.tags{gap:12px}.tags>span+span{padding-left:12px}.screenCopy{padding:24px}.screenNav{margin-bottom:28px}.screenNav a{flex:1 1 44%;font-size:12px;padding:12px}.imageLink{padding:10px}.actions{width:100%}.actions>a{flex:1 1 100%}.footer{align-items:start;flex-direction:column}}
++
++.install{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:40px;align-items:center;padding:32px;border:1px solid var(--line);border-radius:12px;background:var(--soft);scroll-margin-top:100px;margin:40px 0}.install>div{min-width:0}.install h3{font-size:clamp(28px,3vw,42px);line-height:1.08;letter-spacing:-.05em;font-weight:600;margin:0 0 20px}.install p:not(.eyebrow){color:var(--muted);font-size:14px;line-height:1.75}.install code{overflow-wrap:anywhere}.installLinks{display:flex;gap:18px;flex-wrap:wrap;margin-top:24px}.installLinks a{display:inline-flex;align-items:center;gap:10px;min-height:44px;font-size:13px;font-weight:600}.installNote{font-size:12px!important;margin-bottom:0}.install :global(.reference-code){margin:0}.install :global(.reference-code>div){min-height:48px;height:auto;gap:12px}.install :global(.reference-code>div>span){font-size:12px;min-width:0;overflow-wrap:anywhere}.install :global(.reference-code button){min-height:44px;min-width:44px;flex-shrink:0}.install :global(.reference-code pre){font-size:13px;line-height:1.9}.install :global(.reference-code code){font-size:inherit;white-space:pre}
++@media(max-width:850px){.install{grid-template-columns:1fr;gap:24px}}@media(max-width:480px){.install{padding:20px}.install :global(.reference-code pre){padding:16px;font-size:11px}}
+--- a/app/docs/page.tsx
++++ b/app/docs/page.tsx
+@@ -16,7 +16,8 @@
+       <div className="docs-breadcrumb"><span>Docs</span><b>/</b><span>Getting started</span></div>
+       <p className="docs-overline">GETTING STARTED</p>
+       <h1>Installation</h1>
+-      <p className="docs-lead">Start an HTML-first fullstack application, or add Coordiation CSS to your existing project. Choose the guide that matches what you want to build.</p>
++      <p className="docs-lead">Start a publishing site with Coordiation CMS, build an HTML-first fullstack application, or add Coordiation CSS to your existing project. Choose the guide that matches what you want to build.</p>
++      <div className="docs-callout"><strong>Coordiation CMS · Published on npm</strong><p>Create a complete publishing workspace with posts, pages, SEO controls, and native themes. Requires Node.js 22.18 or newer; Node.js 24 is recommended.</p><Link href="/docs/installation/using-cms">Install Coordiation CMS →</Link></div>
+       <div className="docs-callout"><strong>New: Coordiation Fullstack alpha</strong><p>Server-rendered .coord pages, backend APIs and eight guided delivery modes. No required React or Next.js runtime. Requires Node.js 22.18 or newer; alpha APIs may change.</p><Link href="/docs/installation/using-fullstack">Install the fullstack alpha →</Link></div>
+       <div className="docs-callout"><strong>Release candidate 1.0.0-rc.1 is available</strong><p>All {capabilities.length} tracked capability areas are implemented and documented across twelve public packages. Install the candidate with the npm <code>next</code> tag while <code>latest</code> remains unchanged.</p><Link href="/docs/releases/1.0.0-rc.1">Read the RC release notes →</Link></div>
+       <h2 id="cookbook">Build a complete page</h2>
+@@ -47,7 +48,7 @@
+         <Link href="/docs/installation/using-wordpress"><span>Theme workflow</span><strong>WordPress</strong><p>Compile inside a custom or child theme and enqueue the generated asset.</p><code>functions.php</code><b>→</b></Link>
+       </div>
+       <h2 id="requirements">Requirements</h2>
+-      <ul className="docs-list"><li>Node.js 20 or newer</li><li>Static, complete class names in source files</li><li>Vite 5 or newer when using the Vite adapter</li></ul>
++      <ul className="docs-list"><li>Node.js 20 or newer for CSS tooling; CMS and Fullstack require Node.js 22.18 or newer</li><li>Static, complete class names in source files</li><li>Vite 5 or newer when using the Vite adapter</li></ul>
+       <div className="docs-next"><span>Next</span><Link href="/docs/installation/using-npm"><b>Install from npm</b><i>→</i></Link></div>
+     </article>
+   );
+--- a/app/docs/_components/DocsShell.tsx
++++ b/app/docs/_components/DocsShell.tsx
+@@ -6,6 +6,7 @@
+ import HeaderActions from "@/app/_components/HeaderActions";
+ 
+ const navigation = [
++  { title: "Coordiation CMS", items: [["Install CMS", "/docs/installation/using-cms"], ["Administrator setup", "/docs/installation/using-cms#administrator"], ["Deploy your CMS", "/docs/installation/using-cms#production"], ["CMS showcase", "/cms"]] },
+   { title: "Fullstack alpha", items: [["Install Fullstack", "/docs/installation/using-fullstack"], ["Guided delivery modes", "/docs/installation/using-fullstack#delivery-modes"]] },
+   { title: "Getting started", items: [["Installation", "/docs"], ["Using npm", "/docs/installation/using-npm"], ["Using Vite", "/docs/installation/using-vite"], ["Themes", "/docs/themes"], ["Components", "/docs/components"], ["Solar Linear icons", "/docs/icons/solar-linear"], ["Iconsax Line Oval icons", "/docs/icons/iconsax-line-oval"], ["Editor setup", "/docs/tooling/language-server"], ["Compatibility", "/docs/core/compatibility"]] },
+   { title: "Cookbooks", items: [["Build a one-page website", "/cookbook"]] },
+--- a/app/seo.ts
++++ b/app/seo.ts
+@@ -82,6 +82,7 @@
+ }
+ 
+ export const STATIC_INDEXABLE_ROUTES = [
++  "/docs/installation/using-cms",
+   "/cms",
+   "/",
+   "/blogs",
+--- /dev/null
++++ b/app/docs/installation/using-cms/page.tsx
+@@ -0,0 +1,33 @@
++import type { Metadata } from "next";
++import Link from "@/app/_components/SiteLink";
++import SolarIcon from "@/app/_components/SolarIcon";
++import { createSeoMetadata } from "@/app/seo";
++import CodeBlock from "../../_components/CodeBlock";
++import { CMS_VERSION, CMS_CREATE_COMMAND, CMS_INSTALL_COMMANDS } from "../../../cms/installation";
++import styles from "./page.module.css";
++
++export const metadata: Metadata = createSeoMetadata({
++  path: "/docs/installation/using-cms",
++  title: "Install Coordiation CMS — npm quick start and setup",
++  description: "Install Coordiation CMS from npm, start a local publishing site, create your administrator account, customize themes, and prepare your own production deployment.",
++});
++
++export default function UsingCMSPage() {
++  return <article className={`docs-article ${styles.article}`}>
++    <div className="docs-breadcrumb"><Link href="/docs">Docs</Link><b>/</b><span>Coordiation CMS</span></div>
++    <p className="docs-overline">INSTALLATION · COORDIATION CMS</p>
++    <h1>Install Coordiation CMS</h1>
++    <p className="docs-lead">Start a self-hosted publishing workspace with posts, pages, a block editor, SEO controls, and native themes. The npm initializer gives you the application source in your own directory.</p>
++    <div className="docs-callout"><strong>Published on npm · {CMS_VERSION} · MIT</strong><p>This guide targets CMS {CMS_VERSION}, built on Coordiation Fullstack alpha. Node.js 22.18 or newer is required; Node.js 24 is recommended. WordPress PHP themes and plugins are not compatible.</p><a href="https://www.npmjs.com/package/coordiation-cms" target="_blank" rel="noopener noreferrer">View the npm package <SolarIcon name="arrow-to-top-right" size={15} /></a></div>
++    <section id="quick-start" className={styles.details}><h2>Quick start</h2><p>Run these commands in a terminal. Choose a new folder name if <code>my-site</code> already exists.</p><CodeBlock title="Create and run your CMS" code={CMS_INSTALL_COMMANDS} /><p>Then open <a href="http://127.0.0.1:3118/login" target="_blank" rel="noopener noreferrer">http://127.0.0.1:3118/login</a> on the same computer to create your first administrator.</p></section>
++    <section id="create-project" className="guide-step"><div className="step-number">01</div><div><h2>Create your project</h2><CodeBlock title="Create a new directory" code={CMS_CREATE_COMMAND} /><p>The initializer copies source, public assets, scripts, and setup documentation. It refuses existing paths and does not install dependencies or start a server. The generated project is marked private to prevent accidental npm publication.</p></div></section>
++    <section id="install-and-run" className="guide-step"><div className="step-number">02</div><div><h2>Install, build, and start</h2><CodeBlock title="Run the application" code="cd my-site\nnpm install\nnpm run build\nnpm start" /><p>The server listens at <code>http://127.0.0.1:3118</code>. Keep the terminal running while using your CMS. This starts the application locally; it does not publish your site to a hosting service.</p></div></section>
++    <section id="administrator" className="guide-step"><div className="step-number">03</div><div><h2>Create your administrator</h2><p>Open <code>http://127.0.0.1:3118/login</code>, enter your name and email, and choose a password of at least 15 characters. No demo credentials are bundled. Initial setup closes automatically after the first account is created.</p><p>Sign in to manage your content. The dashboard is at <code>/admin</code>; the public website is at <code>/</code>.</p></div></section>
++    <section id="first-site" className="guide-step"><div className="step-number">04</div><div><h2>Make the site yours</h2><ul className="docs-list"><li><strong>Settings:</strong> update your site title, reading preferences, and comment visibility.</li><li><strong>Posts / Pages:</strong> create content, review the SEO meter, and save drafts or publish.</li><li><strong>Themes:</strong> preview or activate an included theme. For Teraform, choose <strong>Edit homepage</strong> to change its sections and motion settings.</li><li><strong>Settings → AI writing:</strong> optionally connect your own OpenAI API key. Review suggestions before applying them; API billing is separate.</li></ul><Link href="/cms#inside">See the admin screenshots <SolarIcon name="arrow-right" size={15} /></Link></div></section>
++    <section id="development" className={styles.details}><h2>Editing the source</h2><p>Stop the running server with Ctrl+C before using development mode:</p><CodeBlock title="Development mode" code="npm run dev" /><p>Reload the browser after source changes rebuild. Before running the production build locally again, stop development mode and run <code>npm run build</code>, then <code>npm start</code>.</p></section>
++    <section id="data" className={styles.details}><h2>Your data stays with your project</h2><p>SQLite data is created at <code>data/cms.sqlite</code>. Media, content, users, themes, and settings live in that database. If you configure OpenAI, its separate encryption key is stored beside the database. Back up both; keep private files out of Git and public web directories.</p><p>The generated project includes <code>docs/DEPLOYMENT.md</code>, <code>docs/THEMES.md</code>, and <code>docs/SEO-AND-AI.md</code> for recovery, theme packaging, and AI configuration.</p></section>
++    <section id="production" className={styles.details}><h2>Deploy to your own domain</h2><p>The included Docker and Compose files are a starting point for a server with Traefik. Before deployment, replace the example domain with yours in the Compose build origin, runtime <code>CMS_ORIGIN</code>, and Traefik host rule. For a non-Docker build, also update <code>coordiation.config.json</code> so the build and runtime origins match.</p><p>Create a private <code>.env</code> from <code>.env.example</code>, set your administrator email and a random <code>CMS_SETUP_TOKEN</code>, and use HTTPS with secure cookies. Local Node commands do not automatically load <code>.env</code>; provide the environment variables to the process. Follow the complete deployment and backup guide before exposing the initial setup screen.</p><a href="https://github.com/wiryosaputraofficial/coordiationcms/blob/main/docs/DEPLOYMENT.md" target="_blank" rel="noopener noreferrer">Read the deployment guide <SolarIcon name="arrow-to-top-right" size={15} /></a></section>
++    <section id="troubleshooting" className={styles.details}><h2>Troubleshooting</h2><ul className="docs-list"><li><strong>Destination already exists:</strong> choose a new folder name. The initializer intentionally avoids overwriting a site.</li><li><strong>Port 3118 is in use:</strong> stop the other local server, or change the port in both application scripts and <code>coordiation.config.json</code>. Keep <code>CMS_ORIGIN</code> aligned if set.</li><li><strong>Build missing:</strong> run <code>npm run build</code> before <code>npm start</code>.</li><li><strong>Unsupported runtime:</strong> check <code>node --version</code> and use Node.js 22.18+; Node.js 24 is recommended.</li></ul></section>
++    <div className="docs-next split"><Link href="/docs"><span>Back to</span><b>All installation guides</b></Link><Link href="/cms"><span>Explore</span><b>CMS showcase <SolarIcon name="arrow-right" size={15} /></b></Link></div>
++  </article>;
++}
+--- /dev/null
++++ b/app/docs/installation/using-cms/page.module.css
+@@ -0,0 +1 @@
++.article{min-width:0}.article :global(.guide-step p),.article :global(.docs-list),.details>p,.article :global(.docs-callout p){font-size:1rem;line-height:1.75}.article :global(.reference-code > div){height:auto;min-height:48px;gap:12px;font-size:.875rem;color:#ccc}.article :global(.reference-code > div > span){min-width:0;overflow-wrap:anywhere}.article :global(.reference-code button){min-width:44px;min-height:44px;flex-shrink:0;font-size:.875rem;color:#fff}.article :global(.reference-code pre){font-size:.875rem;max-width:100%}.article :global(.reference-code pre code){font-size:inherit}.article p code,.article li code{overflow-wrap:anywhere}.article a{overflow-wrap:anywhere}.details{margin-top:56px;scroll-margin-top:100px}
+--- /dev/null
++++ b/app/cms/installation.ts
+@@ -0,0 +1,3 @@
++export const CMS_VERSION = "0.1.0";
++export const CMS_CREATE_COMMAND = `npx coordiation-cms@${CMS_VERSION} init my-site`;
++export const CMS_INSTALL_COMMANDS = `${CMS_CREATE_COMMAND}\ncd my-site\nnpm install\nnpm run build\nnpm start`;

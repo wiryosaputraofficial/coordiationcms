@@ -21,3 +21,9 @@ All five screenshots were captured directly from the local CMS on 6 September 20
 `website-source/` retains the changed website files. `coordiation-website.patch` applies to the captured Coordiation website source; `base-checksums.json` records the prior hashes to detect intervening changes. Copy screenshots to the website's `public/cms/` directory. The changes preserve the website's existing build, authentication, hosting settings, dependencies, and theme registry.
 
 Validation: website production build, lint of changed components and metadata, rendered showcase, screenshot asset links, CTA targets, and sitemap route registration.
+
+## npm installation guide
+
+The showcase's `#inside` section now includes an `#install` quick start with copyable npm commands, prerequisites, and the local administrator setup URL. The full guide lives at https://coordiation.com/docs/installation/using-cms and is linked from `/docs`, documentation navigation/search, and the sitemap. Both surfaces share the versioned installation command source.
+
+`installation-guide.patch` applies after the original showcase integration; `installation-base-checksums.json` detects intervening website edits. `website-source/` contains the latest complete versions of changed files. The commands target the verified published package `coordiation-cms@0.1.0`.

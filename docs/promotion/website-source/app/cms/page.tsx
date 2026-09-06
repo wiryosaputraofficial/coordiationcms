@@ -4,6 +4,8 @@ import HeaderActions from "../_components/HeaderActions";
 import SolarIcon from "../_components/SolarIcon";
 import { createSeoMetadata } from "../seo";
 import styles from "./showcase.module.css";
+import CodeBlock from "../docs/_components/CodeBlock";
+import { CMS_VERSION, CMS_INSTALL_COMMANDS } from "./installation";
 
 export const metadata: Metadata = createSeoMetadata({
   path: "/cms",
@@ -22,17 +24,18 @@ export default function CMSShowcase() {
   return <main className={styles.page}>
     <header className="managed-header site-header">
       <Link className="brand" href="/" aria-label="Coordiation home"><img src="/coordiation-logo.png" alt="" /><span>Coordiation</span><span className="brand-product">CMS</span></Link>
-      <nav aria-label="Main navigation"><Link href="/">Home</Link><a href="#inside">Inside the CMS</a><a href="#teraform">Teraform</a><Link href="/docs/installation/using-fullstack">Fullstack</Link></nav>
+      <nav aria-label="Main navigation"><Link href="/">Home</Link><a href="#inside">Inside the CMS</a><a href="#teraform">Teraform</a><Link href="/docs/installation/using-cms">Installation</Link></nav>
       <HeaderActions><a className="header-cta" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Live preview <SolarIcon name="arrow-to-top-right" size={15} /></a></HeaderActions>
     </header>
     <section className={styles.hero}>
       <p className={styles.eyebrow}><span className={styles.dot} /> INTRODUCING COORDIATION CMS · EARLY PREVIEW</p>
       <h1>Your content.<br />Your themes.<br /><em>Your space.</em></h1>
-      <div className={styles.heroBottom}><p>A publishing home built with Coordiation Fullstack. Write stories, shape your website, and make your next theme your own.</p><div className={styles.actions}><a className="button button-dark" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Open live preview <SolarIcon name="arrow-to-top-right" size={17} /></a><a className="button button-light" href="#inside">Explore the admin <SolarIcon name="arrow-down" size={17} /></a></div></div>
+      <div className={styles.heroBottom}><p>A publishing home built with Coordiation Fullstack. Write stories, shape your website, and make your next theme your own.</p><div className={styles.actions}><a className="button button-dark" href="https://app.coordiation.com/" target="_blank" rel="noopener noreferrer">Open live preview <SolarIcon name="arrow-to-top-right" size={17} /></a><a className="button button-light" href="#install">Install CMS <SolarIcon name="arrow-down" size={17} /></a></div></div>
       <div className={styles.tags}><span>Self-hosted</span><span>Posts & pages</span><span>Native themes</span><span>SEO + AI writing</span></div>
     </section>
     <section id="inside" className={styles.inside}>
       <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>A LOOK INSIDE</p><h2>From the first draft<br />to your next launch.</h2></div><p>Real screenshots of the current CMS, using sample content. Take a closer look at the tools behind your website.</p></div>
+      <div id="install" className={styles.install}><div><p className={styles.eyebrow}>AVAILABLE ON NPM · {CMS_VERSION} · MIT</p><h3>Start your own<br />publishing space.</h3><p>Use Node.js 22.18 or newer; Node.js 24 is recommended. Run these commands in a terminal to create a new site.</p><p>Then open <code>http://127.0.0.1:3118/login</code> on your computer and create your administrator with a password of at least 15 characters.</p><div className={styles.installLinks}><Link href="/docs/installation/using-cms">Full installation guide <SolarIcon name="arrow-right" size={16} /></Link><a href="https://www.npmjs.com/package/coordiation-cms" target="_blank" rel="noopener noreferrer">View on npm <SolarIcon name="arrow-to-top-right" size={16} /></a></div></div><div><CodeBlock title="Install and run Coordiation CMS" code={CMS_INSTALL_COMMANDS} /><p className={styles.installNote}>Choose a new directory. The initializer preserves existing folders. These commands start a local site; see the guide to deploy on your own domain.</p></div></div>
       <nav className={styles.screenNav} aria-label="Screenshot gallery">{screens.map(s=><a key={s.id} href={`#${s.id}`}>{s.id === "homepage" ? "Homepage editor" : s.id === "editor" ? "Post editor & SEO" : s.title === "Everything starts here." ? "Dashboard" : "Themes"}<SolarIcon name="arrow-down" size={14} /></a>)}</nav>
       <div className={styles.screenGrid}>{screens.map(s=><article id={s.id} className={styles.screen} key={s.id}><div className={styles.screenCopy}><p className={styles.eyebrow}>{s.label}</p><h3>{s.title}</h3><p>{s.copy}</p></div><a className={styles.imageLink} href={`/cms/${s.image}.jpg`} target="_blank" rel="noopener noreferrer" aria-label={`Open full-size screenshot: ${s.alt}`}><img src={`/cms/${s.image}.jpg`} width="1265" height="712" alt={s.alt} loading="lazy" /><span>View full size <SolarIcon name="arrow-to-top-right" size={15} /></span></a></article>)}</div>
     </section>
