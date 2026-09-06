@@ -10,11 +10,11 @@ The Coordiation homepage includes a CMS feature section and desktop/mobile navig
 
 All five screenshots were captured directly from the local CMS on 6 September 2026, at the existing browser viewport, with sample content. No generated UI mockups or provider credentials are included. The administrator name is the product owner's public name. No inbox submissions, private email addresses, or connection settings are shown.
 
-- `screenshots/admin-dashboard.png`: dashboard and sidebar.
-- `screenshots/admin-editor.png`: post editor, AI button, and SEO meter.
-- `screenshots/admin-homepage.png`: Teraform section and homepage editor.
-- `screenshots/admin-themes.png`: native theme management.
-- `screenshots/teraform-homepage.png`: public Teraform frontend.
+- `screenshots/admin-dashboard.jpg`: dashboard and sidebar.
+- `screenshots/admin-editor.jpg`: post editor, AI button, and SEO meter.
+- `screenshots/admin-homepage.jpg`: Teraform section and homepage editor.
+- `screenshots/admin-themes.jpg`: native theme management.
+- `screenshots/teraform-homepage.jpg`: public Teraform frontend.
 
 ## Website integration
 
