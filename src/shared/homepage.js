@@ -99,6 +99,8 @@ export function homepageDefaults(schema) {
       background: "#f1f1ef",
       foreground: "#151515",
       font: "sans",
+      animation: "on",
+      parallax: "gentle",
       ...schema.design,
     },
     order: schema.sections.map((s) => s.id),
@@ -143,6 +145,14 @@ export function validateHomepageData(schema, data) {
   if (!["sans", "serif"].includes(data.design.font))
     throw new Error("Invalid font.");
   design.font = data.design.font;
+  for (const [key, options, fallback] of [
+    ["animation", ["on", "off"], "on"],
+    ["parallax", ["off", "gentle", "standard"], "gentle"],
+  ]) {
+    const value = data.design[key] ?? fallback;
+    if (!options.includes(value)) throw new Error("Invalid motion setting.");
+    design[key] = value;
+  }
   const sections = {};
   for (const s of schema.sections) {
     const d = data.sections[s.id];

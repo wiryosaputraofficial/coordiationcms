@@ -125,3 +125,7 @@
 .co-icon-email {
   mask-image: url(/icons/solar-linear/letter.svg);
 }
+
+.co-icon-search {
+  mask-image: url(/icons/solar-linear/magnifier.svg);
+}

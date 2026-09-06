@@ -127,6 +127,10 @@
   mask-image: url(/icons/solar-linear/letter.svg);
 }
 
+.co-icon-search {
+  mask-image: url(/icons/solar-linear/magnifier.svg);
+}
+
 /* Shared Coordiation components; theme colors remain configurable. */
 :root {
   --pc-border: color-mix(in srgb, var(--theme-fg) 16%, transparent);

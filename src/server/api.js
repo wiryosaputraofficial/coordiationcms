@@ -199,7 +199,7 @@ export function GET(request, { params }) {
           .prepare("SELECT manifest FROM themes")
           .all()
           .map((r) => {
-            const { home, single, css, homepage, ...t } = JSON.parse(
+            const { home, single, archive, css, homepage, ...t } = JSON.parse(
               r.manifest,
             );
             return { ...t, hasHomepage: !!homepage };

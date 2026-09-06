@@ -82,6 +82,7 @@ export function slug(value) {
       "api",
       "media",
       "feed",
+      "blog",
       "theme.css",
       "search",
       "category",

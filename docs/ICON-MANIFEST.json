@@ -193,6 +193,11 @@
       "key": "email",
       "name": "letter",
       "asset": "/icons/solar-linear/letter.svg"
+    },
+    {
+      "key": "search",
+      "name": "magnifier",
+      "asset": "/icons/solar-linear/magnifier.svg"
     }
   ]
 }

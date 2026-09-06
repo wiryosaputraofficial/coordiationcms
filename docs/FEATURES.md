@@ -33,3 +33,5 @@ In **Settings → Discussion**, **Accept new comments** controls submissions whi
 Teraform provides 13 editable sections: header, hero, studio, services, process, work, benefits, reviews, statistics, pricing, FAQ, contact, and footer. Administrators can change text, images, links, list items, section visibility and order, colors, and typography. Saving uses optimistic version checks to prevent overwriting a newer edit. Preview does not activate the theme.
 
 Contact and newsletter submissions are stored in **Tools → Form inbox**. Preview forms are disabled. These forms do not send emails or subscribe visitors to an external mailing provider. Demo prices and reviews are editable placeholders; replace them before publication.
+
+Teraform also includes a matching Blog archive and single article/page layout, searchable published posts, pagination, and preview-preserving navigation. **Design & motion** provides entrance animation and image parallax controls with reduced-motion support.

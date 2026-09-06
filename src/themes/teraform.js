@@ -22,10 +22,16 @@ const action = (label, href, secondary = false) =>
 const sections = [
   {
     id: "header",
-    label: "Header & navigation",
+    label: "Header, navigation & blog",
     fields: [
       text("brand", "Brand name", "Teraform"),
       img("logo", "Logo image", "/coordiation-logo.png"),
+      text("blogTitle", "Blog heading", "Ideas, notes, and perspectives."),
+      area(
+        "blogDescription",
+        "Blog introduction",
+        "Thoughts on design, creative work, and building something that matters.",
+      ),
       text("button", "Button label", "Start a conversation"),
       url("buttonUrl", "Button link", "#contact"),
     ],
@@ -36,6 +42,7 @@ const sections = [
       { label: "Work", url: "#work" },
       { label: "Plans", url: "#pricing" },
       { label: "FAQ", url: "#faqs" },
+      { label: "Blog", url: "/blog" },
     ],
     template: `<header class="fx-header" id="header"><a class="fx-brand" href="/">{{#if logo}}<img src="{{logo}}" alt="{{brand}}">{{/if}}<span>{{brand}}</span></a><nav aria-label="Primary navigation">{{#each items}}<a href="{{url}}">{{label}}</a>{{/each}}</nav>${action("button", "buttonUrl")}</header>`,
   },
@@ -586,6 +593,7 @@ const sections = [
       { label: "Projects", url: "#work" },
       { label: "Plans", url: "#pricing" },
       { label: "Contact", url: "#contact" },
+      { label: "Blog", url: "/blog" },
       { label: "Email", url: "mailto:hello@yourstudio.com" },
     ],
     template: `<footer class="fx-footer" id="footer"><div class="fx-footer-top"><div><h3>{{newsletterTitle}}</h3><p>{{newsletterText}}</p>{{#if subscribed}}<p class="notice">{{success}}</p>{{/if}}<form method="post" action="/api/inquiries" class="fx-newsletter"><input type="hidden" name="kind" value="newsletter"><input name="email" aria-label="{{emailLabel}}" placeholder="{{emailLabel}}" type="email" required maxlength="254"><button type="submit" {{#if preview}}disabled{{/if}}>{{subscribe}} ${icon("arrow")}</button></form></div><nav aria-label="Footer navigation"><p class="fx-eyebrow">{{linkHeading}}</p>{{#each items}}<a href="{{url}}">{{label}} ${arrow}</a>{{/each}}</nav></div><div class="fx-wordmark">{{wordmark}}</div><div class="fx-footer-bottom"><span>{{copyright}}</span><span>{{credit}}</span></div></footer>`,
@@ -608,7 +616,8 @@ export function makeTeraformTheme(css) {
     font: "sans",
     homepage: teraformHomepage,
     home: '<div class="fx-site">{{{homepageContent}}}</div>',
-    single: `<div class="fx-site">{{{homepageHeader}}}<main class="single fx-single"><p class="fx-eyebrow">{{post.category}} · {{post.date}}</p><h1>{{post.title}}</h1><p class="lead">{{post.excerpt}}</p>{{#if post.image}}<img class="cover" src="{{post.image}}" alt="{{post.imageAlt}}">{{/if}}<div class="article-body">{{{content}}}</div>{{{comments}}}<a class="button fx-button" href="/">${icon("back")} Back to home</a></main>{{{homepageFooter}}}</div>`,
+    archive: `<div class="fx-site">{{{homepageHeader}}}<main class="fx-blog"><header class="fx-blog-hero"><p class="fx-eyebrow">The journal</p><h1>{{blogTitle}}</h1><p>{{blogDescription}}</p><form class="fx-blog-search" method="get" action="/blog">{{#if preview}}<input type="hidden" name="preview" value="1"><input type="hidden" name="theme" value="{{site.activeTheme}}">{{/if}}<label class="fx-search-field"><span>${icon("search")} Search the journal</span><input name="q" type="search" value="{{query}}" maxlength="200" placeholder="Search articles"></label><button type="submit" class="fx-button">Search ${icon("arrow")}</button>{{#if query}}<a class="fx-clear" href="{{blogURL}}">Clear search</a>{{/if}}</form></header><section class="fx-blog-grid" aria-label="Articles">{{#each posts}}<article class="fx-blog-card"><a class="fx-blog-image" href="{{href}}" aria-label="Read {{title}}">{{#if image}}<img src="{{image}}" alt="{{imageAlt}}" loading="lazy">{{else}}<span class="fx-blog-placeholder">${icon("posts")}<span>STUDIO NOTES</span></span>{{/if}}<span class="fx-blog-arrow">${arrow}</span></a><div class="fx-blog-card-copy"><p class="fx-eyebrow">{{category}} · {{date}}</p><h2><a href="{{href}}">{{title}}</a></h2><p>{{excerpt}}</p><div class="fx-blog-card-bottom"><span>{{author}}{{#if readingTime}} · {{readingTime}} min read{{/if}}</span><a href="{{href}}">Read article ${arrow}</a></div></div></article>{{else}}<div class="fx-blog-empty"><h2>No articles found.</h2><p>Try another search or come back for new stories.</p><a class="fx-button fx-outline" href="{{blogURL}}">View all articles ${icon("arrow")}</a></div>{{/each}}</section><nav class="fx-pagination" aria-label="Blog pagination">{{#if previous}}<a class="fx-button fx-outline" href="{{previous}}">${icon("back")} Previous</a>{{/if}}{{#if next}}<a class="fx-button" href="{{next}}">Next ${icon("arrow")}</a>{{/if}}</nav></main>{{{homepageFooter}}}</div>`,
+    single: `<div class="fx-site">{{{homepageHeader}}}<main class="fx-single"><header class="fx-article-header"><a class="fx-back" href="{{blogURL}}">${icon("back")} All articles</a><p class="fx-eyebrow">{{post.category}} · {{post.date}}</p><h1>{{post.title}}</h1>{{#if post.excerpt}}<p class="lead">{{post.excerpt}}</p>{{/if}}<div class="fx-article-meta"><span>${icon("person")} {{post.author}}</span>{{#if post.readingTime}}<span>${icon("clock")} {{post.readingTime}} min read</span>{{/if}}</div></header>{{#if post.image}}<div class="fx-cover"><img src="{{post.image}}" alt="{{post.imageAlt}}"></div>{{/if}}<article class="article-body fx-article-body">{{{content}}}</article><div class="fx-article-discussion">{{{comments}}}</div><div class="fx-article-end"><a class="button fx-button fx-outline" href="{{blogURL}}">${icon("back")} Back to the journal</a></div></main>{{{homepageFooter}}}</div>`,
     css,
   };
 }

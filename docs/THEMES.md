@@ -63,3 +63,15 @@ The renderer supplies `homepageContent`, `homepageHeader`, and `homepageFooter` 
 ZIP packages still contain only `theme.json`. Uploaded media is not embedded; move referenced media separately or use stable HTTPS URLs when distributing a theme. Teraform's bundled `/theme-assets/teraform/` SVG artwork is included in this CMS release and uses original artwork, not assets from the reference site. The design takes inspiration from [the supplied reference](https://formix.framer.website/), with original branding, copy, and illustrations.
 
 Teraform contact and newsletter forms submit to the built-in inbox. Administrators read submissions from **Tools → Form inbox**. This does not send email or connect a mailing service. Custom theme authors must follow the form field contract in `src/server/inquiries.js`; only the active theme can accept submissions.
+
+### Motion settings
+
+In **Edit homepage → Design & motion**, enable entrance animations and choose **Subtle**, **Standard**, or **Off** for image parallax. Both are included in saved settings and exported theme defaults. Effects use the trusted CMS runtime; theme packages still cannot include scripts. A per-response CSP meta policy and nonce restrict execution to that runtime, in addition to the framework response-header policy. Content remains visible without JavaScript, and the operating system reduced-motion preference disables movement. Mobile parallax is softened.
+
+### Blog and article templates
+
+Teraform includes a dedicated **/blog** archive with search, pagination, featured images, image-free card placeholders, and an empty state. Only public published posts appear. Post and page content uses its matching single template, including author metadata, reading time (when enabled), featured image, content blocks, and the existing comment visibility settings.
+
+Edit the blog heading and introduction in **Edit homepage → Header, navigation & blog**. Navigation items are editable; the supplied defaults include Blog. Header/footer section anchors link back to the homepage from articles. Theme previews retain the selected theme when following blog/article links.
+
+Theme packages may provide an optional `archive` template, which receives the same post list data plus `homepageHeader`, `homepageFooter`, `blogTitle`, `blogDescription`, and `blogURL` for themes with a homepage schema. Post list entries also include `href` to preserve preview navigation. The source editor preserves this template when cloning; edit `theme.json` to author a custom archive. `/blog` is reserved for the archive route.

@@ -38,6 +38,7 @@ const names = new Set([
   "spark",
   "person",
   "email",
+  "search",
 ]);
 export const icon = (name) =>
   `<span class="icon co-icon co-icon-${names.has(name) ? name : "posts"}" aria-hidden="true"></span>`;

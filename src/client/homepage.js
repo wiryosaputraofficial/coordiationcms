@@ -45,7 +45,7 @@ export async function renderHomepageEditor(
   };
   const paint = () => {
     root.querySelector(".homepage-sections").innerHTML =
-      `<button type="button" class="homepage-section-button ${selected === "design" ? "active" : ""}" data-section="design">${icon("themes")} Colors & typography</button>` +
+      `<button type="button" class="homepage-section-button ${selected === "design" ? "active" : ""}" data-section="design">${icon("themes")} Design & motion</button>` +
       data.order
         .map((sid, index) => {
           const section = response.schema.sections.find((s) => s.id === sid);
@@ -54,32 +54,49 @@ export async function renderHomepageEditor(
         .join("");
     const pane = root.querySelector("#homepage-fields");
     if (selected === "design")
-      pane.innerHTML = card(
-        "Colors & typography",
-        "These settings apply to this theme only.",
-        ["accent", "background", "foreground"]
-          .map((key) =>
-            input(
-              {
-                type: "color",
-                label: {
-                  accent: "Accent color",
-                  background: "Background color",
-                  foreground: "Text color",
-                }[key],
-              },
-              data.design[key],
-              key,
+      pane.innerHTML =
+        card(
+          "Design & motion",
+          "These settings apply to this theme only.",
+          ["accent", "background", "foreground"]
+            .map((key) =>
+              input(
+                {
+                  type: "color",
+                  label: {
+                    accent: "Accent color",
+                    background: "Background color",
+                    foreground: "Text color",
+                  }[key],
+                },
+                data.design[key],
+                key,
+              ),
+            )
+            .join("") +
+            field(
+              "hp-font",
+              "Typography",
+              `<select id="hp-font"><option value="sans" ${data.design.font === "sans" ? "selected" : ""}>Geist · Sans serif</option><option value="serif" ${data.design.font === "serif" ? "selected" : ""}>Georgia · Serif</option></select>`,
             ),
-          )
-          .join("") +
+          icon("themes"),
+        ) +
+        card(
+          "Animation & parallax",
+          "Motion respects the visitor's reduced-motion preference. Save, then open Preview to see the effect.",
           field(
-            "hp-font",
-            "Typography",
-            `<select id="hp-font"><option value="sans" ${data.design.font === "sans" ? "selected" : ""}>Geist · Sans serif</option><option value="serif" ${data.design.font === "serif" ? "selected" : ""}>Georgia · Serif</option></select>`,
-          ),
-        icon("themes"),
-      );
+            "hp-animation",
+            "Entrance animations",
+            `<select id="hp-animation" data-hp-field="animation"><option value="on" ${data.design.animation === "on" ? "selected" : ""}>On · Fade and slide into view</option><option value="off" ${data.design.animation === "off" ? "selected" : ""}>Off</option></select>`,
+          ) +
+            field(
+              "hp-parallax",
+              "Image parallax",
+              `<select id="hp-parallax" data-hp-field="parallax"><option value="gentle" ${data.design.parallax === "gentle" ? "selected" : ""}>Subtle</option><option value="standard" ${data.design.parallax === "standard" ? "selected" : ""}>Standard</option><option value="off" ${data.design.parallax === "off" ? "selected" : ""}>Off</option></select>`,
+              "Adds depth to the hero gallery, studio image, and portfolio. Movement is softened on small screens.",
+            ),
+          icon("spark"),
+        );
     else {
       const section = response.schema.sections.find((s) => s.id === selected),
         state = data.sections[selected];

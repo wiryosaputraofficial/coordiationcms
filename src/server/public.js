@@ -15,18 +15,33 @@ import {
 import { renderBlocks, escape } from "./content.js";
 import { renderTheme } from "./themes.js";
 
-const htmlResponse = (body, status = 200) =>
-  new Response(body, {
-    status,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "no-store",
-      "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy":
-        "default-src 'none'; style-src 'self'; font-src 'self'; img-src 'self' https:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
-      "Referrer-Policy": "strict-origin-when-cross-origin",
+const htmlResponse = (body, status = 200) => {
+  const nonce = randomUUID();
+  const motion = body.includes('data-homepage-motion="true"');
+  return new Response(
+    motion
+      ? body
+          .replace(
+            "<head>",
+            `<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'self'; font-src 'self'; img-src 'self' https:; form-action 'self'; base-uri 'none'">`,
+          )
+          .replace(
+            "</body>",
+            `<script nonce="${nonce}" src="/homepage-motion.js?v=2" defer></script></body>`,
+          )
+      : body,
+    {
+      status,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": `default-src 'none'; ${motion ? `script-src 'nonce-${nonce}'; ` : ""}style-src 'self'; font-src 'self'; img-src 'self' https:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'`,
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+      },
     },
-  });
+  );
+};
 function viewPost(p, terms) {
   const { db } = services(),
     media = p.featured_id
@@ -69,9 +84,9 @@ function document(
   site = settings(),
 ) {
   const origin = process.env.CMS_ORIGIN || "http://127.0.0.1:3118";
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — ${escape(site.title)}</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${escape(origin + path)}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="robots" content="${preview ? "noindex,nofollow" : "index,follow"}"><link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — ${escape(site.title)}</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${escape(origin + path)}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="robots" content="${preview ? "noindex,nofollow" : "index,follow"}"><link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css?v=teraform-2"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body${site.homepageMotion ? ` data-homepage-motion="true" data-animation="${escape(site.homepageMotion.animation)}" data-parallax="${escape(site.homepageMotion.parallax)}"` : ""}>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
 }
-export function loadPublic(request, { params }) {
+export function loadPublic(request, { params, archive = false }) {
   return endpoint(() => {
     const { db } = services();
     publishDue();
@@ -89,8 +104,14 @@ export function loadPublic(request, { params }) {
       .get(site.activeTheme);
     if (!themeRow) fail(404, "Theme not found.");
     const theme = JSON.parse(themeRow.manifest);
+    if (theme.homepage) site.homepageMotion = getHomepage(theme).data.design;
     const slots = homepageSlots(theme, site, preview, url);
-    if (theme.homepage && !params?.slug && (preview || !site.homepage)) {
+    if (
+      theme.homepage &&
+      !archive &&
+      !params?.slug &&
+      (preview || !site.homepage)
+    ) {
       const { data } = getHomepage(theme),
         hero = data.sections.hero?.values || {},
         brand = data.sections.header?.values.brand || site.title;
@@ -108,7 +129,7 @@ export function loadPublic(request, { params }) {
     const terms = db.prepare("SELECT * FROM terms").all();
     let row = params?.slug
       ? db.prepare("SELECT * FROM posts WHERE slug=?").get(params.slug)
-      : site.homepage
+      : site.homepage && !archive
         ? db.prepare("SELECT * FROM posts WHERE id=?").get(site.homepage)
         : null;
     if (params?.slug && !row)
@@ -183,9 +204,13 @@ export function loadPublic(request, { params }) {
         (p) => p.categories.includes(term) || p.tags.includes(term),
       );
     const total = posts.length;
-    posts = posts
-      .slice((page - 1) * size, page * size)
-      .map((p) => viewPost(p, terms));
+    posts = posts.slice((page - 1) * size, page * size).map((p) => ({
+      ...viewPost(p, terms),
+      href:
+        "/" +
+        p.slug +
+        (preview ? "?preview=1&theme=" + encodeURIComponent(theme.id) : ""),
+    }));
     const link = (n) => {
       const s = new URLSearchParams({ page: String(n) });
       if (query) s.set("q", query);
@@ -194,17 +219,23 @@ export function loadPublic(request, { params }) {
         s.set("preview", "1");
         s.set("theme", site.activeTheme);
       }
-      return "/?" + s;
+      return (archive ? "/blog?" : "/?") + s;
     };
     return htmlResponse(
       document(
-        query ? `Search: ${query}` : site.title,
-        site.tagline,
-        renderTheme(theme.home, {
+        query
+          ? `Search: ${query}`
+          : archive
+            ? slots.blogTitle || "Blog"
+            : site.title,
+        archive ? slots.blogDescription || site.tagline : site.tagline,
+        renderTheme(archive && theme.archive ? theme.archive : theme.home, {
+          ...slots,
           site,
           menu: site.menu,
           posts,
           query,
+          preview,
           previous: page > 1 ? link(page - 1) : "",
           next: page * size < total ? link(page + 1) : "",
         }),
@@ -214,6 +245,9 @@ export function loadPublic(request, { params }) {
       ),
     );
   });
+}
+export function loadBlog(request) {
+  return loadPublic(request, { params: {}, archive: true });
 }
 export function themeCSS(request) {
   return endpoint(() => {

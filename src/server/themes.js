@@ -140,6 +140,11 @@ export function validTheme(t) {
       t[k].length > (["home", "single", "css"].includes(k) ? 100000 : 500)
     )
       throw new Error(`Theme: invalid ${k}.`);
+  if (
+    t.archive != null &&
+    (typeof t.archive !== "string" || t.archive.length > 100000)
+  )
+    throw new Error("Theme: invalid archive.");
   if (t.cmsVersion !== "1") throw new Error("Theme API version must be 1.");
   for (const k of ["accent", "background", "foreground"])
     if (!/^#[0-9a-f]{6}$/i.test(t[k]))
@@ -156,6 +161,7 @@ export function validTheme(t) {
   const templates = [
     t.home,
     t.single,
+    ...(t.archive ? [t.archive] : []),
     ...(t.homepage?.sections.map((s) => s.template) || []),
   ];
   for (const template of templates) {
@@ -222,6 +228,7 @@ export function validTheme(t) {
     ].map((k) => [k, t[k] || "sans"]),
   );
   if (t.homepage) result.homepage = t.homepage;
+  if (t.archive) result.archive = t.archive;
   if (JSON.stringify(result).length > 280000)
     throw new Error("Theme is too large.");
   return result;

@@ -395,7 +395,7 @@ test("public themes render reusable Coordiation form and card components", async
     assert.match(home, /co-rounded-md/);
     assert.match(home, /co-icon-external/);
     assert.doesNotMatch(home, /↗|←|→/);
-    assert.match(home, /href="\/components.css"/);
+    assert.match(home, /href="\/components.css(?:\?[^" ]*)?"/);
     const article = await (await req("/new-article")).text();
     assert.match(article, /pc-textarea/);
     assert.match(article, /comment-fields/);
@@ -417,8 +417,7 @@ test("public themes render reusable Coordiation form and card components", async
 });
 test("homepage editor saves sections, ordering, images and design with conflict protection", async () => {
   assert.equal(
-    (await req("/api/cms/homepage?id=teraform", "GET", undefined, ""))
-      .status,
+    (await req("/api/cms/homepage?id=teraform", "GET", undefined, "")).status,
     401,
   );
   let home = await api("homepage?id=teraform");
@@ -509,6 +508,119 @@ test("homepage editor saves sections, ordering, images and design with conflict 
   assert.doesNotMatch(html, /Contact form preview/);
   await api("themes", "POST", { id: "folio" });
 });
+test("Teraform motion settings persist, export, and authorize only the trusted runtime", async () => {
+  const home = await api("homepage?id=teraform");
+  assert.equal(home.data.design.animation, "on");
+  assert.equal(home.data.design.parallax, "gentle");
+  const preview = await req("/?preview=1&theme=teraform");
+  const html = await preview.text();
+  const nonce = html.match(
+    /<script nonce="([^"]+)" src="\/homepage-motion.js\?v=2"/,
+  )[1];
+  assert.ok(
+    preview.headers
+      .get("content-security-policy")
+      .includes("script-src 'self'"),
+  );
+  assert.ok(html.includes("script-src 'nonce-" + nonce + "'"));
+  assert.ok(
+    html.indexOf('http-equiv="Content-Security-Policy"') <
+      html.indexOf("<script nonce="),
+  );
+  assert.match(html, /data-animation="on" data-parallax="gentle"/);
+  assert.equal((await req("/homepage-motion.js")).status, 200);
+  home.data.design.animation = "off";
+  home.data.design.parallax = "off";
+  const saved = await api("homepage", "POST", {
+    id: "teraform",
+    version: home.version,
+    data: home.data,
+  });
+  assert.match(
+    await (await req("/?preview=1&theme=teraform")).text(),
+    /data-animation="off" data-parallax="off"/,
+  );
+  const archive = unpackTheme(
+    new Uint8Array(
+      await (await req("/api/cms/themes?export=teraform")).arrayBuffer(),
+    ),
+  );
+  assert.equal(archive.homepage.design.animation, "off");
+  assert.equal(archive.homepage.design.parallax, "off");
+  const bad = structuredClone(home.data);
+  bad.design.parallax = "unsafe";
+  assert.equal(
+    (
+      await req("/api/cms/homepage", "POST", {
+        id: "teraform",
+        version: saved.version,
+        data: bad,
+      })
+    ).status,
+    400,
+  );
+  home.data.design.animation = "on";
+  home.data.design.parallax = "gentle";
+  await api("homepage", "POST", {
+    id: "teraform",
+    version: saved.version,
+    data: home.data,
+  });
+});
+test("Teraform blog and single support previews, search, pagination and publication rules", async () => {
+  const preview = await req("/blog?preview=1&theme=teraform");
+  assert.equal(preview.status, 200);
+  const html = await preview.text();
+  assert.match(html, /fx-blog-grid/);
+  assert.match(html, /new-article\?preview=1&amp;theme=teraform/);
+  assert.match(html, /href="\/\?preview=1&amp;theme=teraform#services"/);
+  const article = await (
+    await req("/new-article?preview=1&theme=teraform")
+  ).text();
+  assert.match(article, /fx-article-header/);
+  assert.match(article, /fx-article-body/);
+  assert.match(article, /fx-footer/);
+  assert.match(article, /href="\/blog\?preview=1&amp;theme=teraform"/);
+  assert.doesNotMatch(article, /<script>alert/);
+  assert.match(
+    await (
+      await req("/blog?q=unmatched-teraform-query&preview=1&theme=teraform")
+    ).text(),
+    /No articles found/,
+  );
+  assert.match(
+    await (await req("/blog?q=article&preview=1&theme=teraform")).text(),
+    /new-article/,
+  );
+  assert.equal(
+    (await req("/blog?preview=1&theme=teraform", "GET", undefined, "")).status,
+    401,
+  );
+  const previous = await api("settings");
+  await api("settings", "POST", { postsPerPage: 1 });
+  const page = await (await req("/blog?preview=1&theme=teraform")).text();
+  assert.match(page, /href="\/blog\?page=2&amp;preview=1&amp;theme=teraform"/);
+  await api("settings", "POST", { postsPerPage: previous.postsPerPage });
+  await api("themes", "POST", { id: "teraform" });
+  const live = await (await req("/new-article", "GET", undefined, "")).text();
+  assert.match(live, /fx-article-header/);
+  assert.match(live, /Submit comment/);
+  assert.match(live, /href="\/#services"/);
+  assert.match(
+    await (await req("/blog", "GET", undefined, "")).text(),
+    /fx-blog-grid/,
+  );
+  await api("themes", "POST", { id: "folio" });
+  assert.equal(
+    (
+      await req("/api/cms/posts", "POST", {
+        title: "Reserved blog",
+        slug: "blog",
+      })
+    ).status,
+    400,
+  );
+});
 test("homepage schema rejects oversized lists, duplicate order and unsafe section templates", async () => {
   const home = await api("homepage?id=teraform");
   for (const mutate of [
@@ -534,9 +646,7 @@ test("homepage schema rejects oversized lists, duplicate order and unsafe sectio
       400,
     );
   }
-  const theme = structuredClone(
-    builtInThemes.find((t) => t.id === "teraform"),
-  );
+  const theme = structuredClone(builtInThemes.find((t) => t.id === "teraform"));
   theme.homepage.sections[0].template =
     "{{#each items}}{{#each items}}bad{{/each}}{{/each}}";
   assert.throws(() => validTheme(theme), /Nested/);
@@ -634,14 +744,8 @@ test("administrator creates authors, contributors and subscribers", async () => 
 });
 test("roles block settings, other authors content, pages and publishing", async () => {
   assert.equal(
-    (
-      await req(
-        "/api/cms/homepage?id=teraform",
-        "GET",
-        undefined,
-        authorCookie,
-      )
-    ).status,
+    (await req("/api/cms/homepage?id=teraform", "GET", undefined, authorCookie))
+      .status,
     403,
   );
   assert.equal(
