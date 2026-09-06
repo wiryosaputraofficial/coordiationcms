@@ -393,16 +393,27 @@ test("public themes render reusable Coordiation form and card components", async
     assert.match(home, /pc-button/);
     assert.match(home, /pc-card/);
     assert.match(home, /co-rounded-md/);
+    assert.match(home, /co-icon-external/);
+    assert.doesNotMatch(home, /↗|←|→/);
     assert.match(home, /href="\/components.css"/);
     const article = await (await req("/new-article")).text();
     assert.match(article, /pc-textarea/);
     assert.match(article, /comment-fields/);
+    for (const name of ["back", "comments", "person", "email", "edit", "arrow"])
+      assert.match(
+        article,
+        new RegExp(`co-icon-${name}\" aria-hidden=\"true\"`),
+      );
+    assert.doesNotMatch(article, /↗|←|→/);
     assert.match(article, /name="postId"/);
   }
   await api("themes", "POST", { id: "folio" });
   const css = await req("/components.css");
   assert.equal(css.status, 200);
-  assert.match(await css.text(), /\.pc-input/);
+  const styles = await css.text();
+  assert.match(styles, /\.pc-input/);
+  assert.match(styles, /solar-linear\/letter\.svg/);
+  assert.equal((await req("/icons/solar-linear/letter.svg")).status, 200);
 });
 test("administrator creates authors, contributors and subscribers", async () => {
   for (const role of ["author", "contributor", "subscriber"])

@@ -183,6 +183,16 @@
       "key": "spark",
       "name": "stars-minimalistic",
       "asset": "/icons/solar-linear/stars-minimalistic.svg"
+    },
+    {
+      "key": "person",
+      "name": "user-rounded",
+      "asset": "/icons/solar-linear/user-rounded.svg"
+    },
+    {
+      "key": "email",
+      "name": "letter",
+      "asset": "/icons/solar-linear/letter.svg"
     }
   ]
 }

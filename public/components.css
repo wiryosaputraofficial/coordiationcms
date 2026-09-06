@@ -1,4 +1,132 @@
 @layer co-theme{:root{--co-space-unit:0.25rem;--co-color-inherit:inherit;--co-color-transparent:transparent;--co-color-current:currentColor;--co-color-black:#000000;--co-color-white:#ffffff;--co-color-brand-50:oklch(97% 0.014 254.604);--co-color-brand-100:oklch(93.2% 0.032 255.585);--co-color-brand-200:oklch(88.2% 0.059 254.128);--co-color-brand-300:oklch(80.9% 0.105 251.813);--co-color-brand-400:oklch(70.7% 0.165 254.624);--co-color-brand-500:oklch(62.3% 0.214 259.815);--co-color-brand-600:oklch(54.6% 0.245 262.881);--co-color-brand-700:oklch(48.8% 0.243 264.376);--co-color-brand-800:oklch(42.4% 0.199 265.638);--co-color-brand-900:oklch(37.9% 0.146 265.522);--co-color-brand-950:oklch(28.2% 0.091 267.935);--co-color-neutral-50:#fafafa;--co-color-neutral-100:#f5f5f5;--co-color-neutral-200:#e5e5e5;--co-color-neutral-300:#d4d4d4;--co-color-neutral-400:#a3a3a3;--co-color-neutral-500:#737373;--co-color-neutral-600:#525252;--co-color-neutral-700:#404040;--co-color-neutral-800:#262626;--co-color-neutral-900:#171717;--co-color-neutral-950:#0a0a0a;--co-color-red:#ef4444;--co-color-orange:#f97316;--co-color-amber:#f59e0b;--co-color-yellow:#eab308;--co-color-green:#22c55e;--co-color-emerald:#10b981;--co-color-teal:#14b8a6;--co-color-cyan:#06b6d4;--co-color-sky:#0ea5e9;--co-color-blue:#3b82f6;--co-color-indigo:#6366f1;--co-color-violet:#8b5cf6;--co-color-purple:#a855f7;--co-color-fuchsia:#d946ef;--co-color-pink:#ec4899;--co-color-rose:#f43f5e;--co-breakpoint-sm:40rem;--co-breakpoint-md:48rem;--co-breakpoint-lg:64rem;--co-breakpoint-xl:80rem;--co-breakpoint-2xl:96rem;--co-aspect-video:16 / 9;--co-container-3xs:16rem;--co-container-2xs:18rem;--co-container-xs:20rem;--co-container-sm:24rem;--co-container-md:28rem;--co-container-lg:32rem;--co-container-xl:36rem;--co-container-2xl:42rem;--co-container-3xl:48rem;--co-container-4xl:56rem;--co-container-5xl:64rem;--co-container-6xl:72rem;--co-container-7xl:80rem;--co-perspective-dramatic:100px;--co-perspective-near:300px;--co-perspective-normal:500px;--co-perspective-midrange:800px;--co-perspective-distant:1200px;--co-ease-in:cubic-bezier(0.4, 0, 1, 1);--co-ease-out:cubic-bezier(0, 0, 0.2, 1);--co-ease-in-out:cubic-bezier(0.4, 0, 0.2, 1);--co-animate-spin:co-spin 1s linear infinite;--co-animate-ping:co-ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;--co-animate-pulse:co-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;--co-animate-bounce:co-bounce 1s infinite;--co-default-transition-duration:150ms;--co-default-transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);--co-font-sans:Inter, ui-sans-serif, system-ui, sans-serif;--co-font-serif:ui-serif, Georgia, Cambria, serif;--co-font-mono:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;--co-font-weight-thin:100;--co-font-weight-extralight:200;--co-font-weight-light:300;--co-font-weight-normal:400;--co-font-weight-medium:500;--co-font-weight-semibold:600;--co-font-weight-bold:700;--co-font-weight-extrabold:800;--co-font-weight-black:900;--co-text-xs:0.75rem;--co-text-xs--line-height:1rem;--co-text-sm:0.875rem;--co-text-sm--line-height:1.25rem;--co-text-base:1rem;--co-text-base--line-height:1.5rem;--co-text-lg:1.125rem;--co-text-lg--line-height:1.75rem;--co-text-xl:1.25rem;--co-text-xl--line-height:1.75rem;--co-text-2xl:1.5rem;--co-text-2xl--line-height:2rem;--co-text-3xl:1.875rem;--co-text-3xl--line-height:2.25rem;--co-text-4xl:2.25rem;--co-text-4xl--line-height:2.5rem;--co-text-5xl:3rem;--co-text-5xl--line-height:1;--co-text-6xl:3.75rem;--co-text-6xl--line-height:1;--co-text-7xl:4.5rem;--co-text-7xl--line-height:1;--co-text-8xl:6rem;--co-text-8xl--line-height:1;--co-text-9xl:8rem;--co-text-9xl--line-height:1;--co-tracking-tighter:-0.05em;--co-tracking-tight:-0.025em;--co-tracking-normal:0em;--co-tracking-wide:0.025em;--co-tracking-wider:0.05em;--co-tracking-widest:0.1em;--co-leading-none:1;--co-leading-tight:1.25;--co-leading-snug:1.375;--co-leading-normal:1.5;--co-leading-relaxed:1.625;--co-leading-loose:2;--co-radius-none:0;--co-radius-xs:0.125rem;--co-radius-sm:0.125rem;--co-radius-default:0.25rem;--co-radius-md:0.375rem;--co-radius-lg:0.5rem;--co-radius-xl:0.75rem;--co-radius-2xl:1rem;--co-radius-3xl:1.5rem;--co-radius-4xl:2rem;--co-radius-full:9999px;--co-shadow-2xs:0 1px var(--co-shadow-color, rgb(0 0 0 / 0.05));--co-shadow-xs:0 1px 2px 0 var(--co-shadow-color, rgb(0 0 0 / 0.05));--co-shadow-sm:0 1px 3px 0 var(--co-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--co-shadow-color, rgb(0 0 0 / 0.1));--co-shadow-default:0 1px 3px var(--co-shadow-color, rgb(0 0 0 / 0.12)), 0 1px 2px var(--co-shadow-color, rgb(0 0 0 / 0.08));--co-shadow-md:0 4px 6px -1px var(--co-shadow-color, rgb(0 0 0 / 0.12)), 0 2px 4px -2px var(--co-shadow-color, rgb(0 0 0 / 0.1));--co-shadow-lg:0 10px 15px -3px var(--co-shadow-color, rgb(0 0 0 / 0.12)), 0 4px 6px -4px var(--co-shadow-color, rgb(0 0 0 / 0.1));--co-shadow-xl:0 20px 25px -5px var(--co-shadow-color, rgb(0 0 0 / 0.12)), 0 8px 10px -6px var(--co-shadow-color, rgb(0 0 0 / 0.1));--co-shadow-2xl:0 25px 50px -12px var(--co-shadow-color, rgb(0 0 0 / 0.25));--co-shadow-none:0 0 #0000;--co-inset-shadow-2xs:inset 0 1px var(--co-inset-shadow-color, rgb(0 0 0 / 0.05));--co-inset-shadow-xs:inset 0 1px 1px var(--co-inset-shadow-color, rgb(0 0 0 / 0.05));--co-inset-shadow-sm:inset 0 2px 4px var(--co-inset-shadow-color, rgb(0 0 0 / 0.05));--co-inset-shadow-none:inset 0 0 #0000;--co-text-shadow-2xs:0 1px 0 var(--co-text-shadow-color, rgb(0 0 0 / 0.15));--co-text-shadow-xs:0 1px 1px var(--co-text-shadow-color, rgb(0 0 0 / 0.2));--co-text-shadow-sm:0 1px 0 var(--co-text-shadow-color, rgb(0 0 0 / 0.075)), 0 1px 1px var(--co-text-shadow-color, rgb(0 0 0 / 0.075)), 0 2px 2px var(--co-text-shadow-color, rgb(0 0 0 / 0.075));--co-text-shadow-md:0 1px 1px var(--co-text-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px var(--co-text-shadow-color, rgb(0 0 0 / 0.1)), 0 2px 4px var(--co-text-shadow-color, rgb(0 0 0 / 0.1));--co-text-shadow-lg:0 1px 2px var(--co-text-shadow-color, rgb(0 0 0 / 0.1)), 0 3px 2px var(--co-text-shadow-color, rgb(0 0 0 / 0.1)), 0 4px 8px var(--co-text-shadow-color, rgb(0 0 0 / 0.1));--co-text-shadow-none:none;--co-blur-none:0;--co-blur-xs:4px;--co-blur-sm:8px;--co-blur-md:12px;--co-blur-lg:16px;--co-blur-xl:24px;--co-blur-2xl:40px;--co-blur-3xl:64px;--co-drop-shadow-xs:0 1px 1px var(--co-drop-shadow-color, rgb(0 0 0 / 0.05));--co-drop-shadow-sm:0 1px 2px var(--co-drop-shadow-color, rgb(0 0 0 / 0.15));--co-drop-shadow-md:0 3px 3px var(--co-drop-shadow-color, rgb(0 0 0 / 0.12));--co-drop-shadow-lg:0 4px 4px var(--co-drop-shadow-color, rgb(0 0 0 / 0.15));--co-drop-shadow-xl:0 9px 7px var(--co-drop-shadow-color, rgb(0 0 0 / 0.1));--co-drop-shadow-2xl:0 25px 25px var(--co-drop-shadow-color, rgb(0 0 0 / 0.15));--co-drop-shadow-none:0 0 #0000;}}@layer co-base{}@layer co-utilities{.co-inline-flex{display:inline-flex;}.co-flex{display:flex;}.co-grid{display:grid;}.co-caption-bottom{caption-side:bottom;}.co-px-2\.5{padding-inline:calc(var(--co-space-unit) * 2.5);}.co-px-3{padding-inline:calc(var(--co-space-unit) * 3);}.co-px-4{padding-inline:calc(var(--co-space-unit) * 4);}.co-py-1{padding-block:calc(var(--co-space-unit) * 1);}.co-py-2{padding-block:calc(var(--co-space-unit) * 2);}.co-w-full{width:100%;}.co-h-10{height:calc(var(--co-space-unit) * 10);}.co-gap-2{gap:calc(var(--co-space-unit) * 2);}.co-gap-4{gap:calc(var(--co-space-unit) * 4);}.co-items-center{align-items:center;}.co-justify-center{justify-content:center;}.co-font-medium{font-weight:500;}.co-text-sm{font-size:0.875rem;line-height:1.25rem;}.co-text-xs{font-size:0.75rem;line-height:1rem;}.co-border{border-width:1px;}.co-outline-none{outline-style:none;}.co-rounded-full{border-radius:var(--co-radius-full);}.co-rounded-md{border-radius:var(--co-radius-md);}.co-rounded-xl{border-radius:var(--co-radius-xl);}.co-shadow-sm{--co-shadow:var(--co-shadow-sm);box-shadow:var(--co-inset-ring-shadow, 0 0 #0000), var(--co-ring-offset-shadow, 0 0 #0000), var(--co-ring-shadow, 0 0 #0000), var(--co-shadow, 0 0 #0000);}.co-transition{transition-property:color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --co-gradient-from, --co-gradient-via, --co-gradient-to, opacity, box-shadow, transform, translate, scale, rotate, filter, -webkit-backdrop-filter, backdrop-filter, display, content-visibility, overlay, pointer-events;transition-duration:var(--co-default-transition-duration);transition-timing-function:var(--co-default-transition-timing-function);}.focus-visible\:co-ring-2:focus-visible{--co-ring-offset-shadow:0 0 0 var(--co-ring-offset-width, 0px) var(--co-ring-offset-color, transparent);--co-ring-shadow:0 0 0 calc(2px + var(--co-ring-offset-width, 0px)) var(--co-ring-color, currentColor);box-shadow:var(--co-inset-ring-shadow, 0 0 #0000), var(--co-ring-offset-shadow, 0 0 #0000), var(--co-ring-shadow, 0 0 #0000), var(--co-shadow, 0 0 #0000);}.disabled\:co-opacity-50:disabled{opacity:0.5;}}
+.icon.co-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  vertical-align: middle;
+  stroke: none;
+  fill: none;
+}
+.co-icon-dashboard {
+  mask-image: url(/icons/solar-linear/widget-2.svg);
+}
+.co-icon-posts {
+  mask-image: url(/icons/solar-linear/document-text.svg);
+}
+.co-icon-pages {
+  mask-image: url(/icons/solar-linear/documents.svg);
+}
+.co-icon-media {
+  mask-image: url(/icons/solar-linear/gallery-minimalistic.svg);
+}
+.co-icon-comments {
+  mask-image: url(/icons/solar-linear/chat-round-dots.svg);
+}
+.co-icon-themes {
+  mask-image: url(/icons/solar-linear/palette-round.svg);
+}
+.co-icon-plugins {
+  mask-image: url(/icons/solar-linear/plug-circle.svg);
+}
+.co-icon-users {
+  mask-image: url(/icons/solar-linear/users-group-rounded.svg);
+}
+.co-icon-settings {
+  mask-image: url(/icons/solar-linear/settings-minimalistic.svg);
+}
+.co-icon-tools {
+  mask-image: url(/icons/solar-linear/tuning-2.svg);
+}
+.co-icon-plus {
+  mask-image: url(/icons/solar-linear/add-square.svg);
+}
+.co-icon-arrow {
+  mask-image: url(/icons/solar-linear/arrow-right.svg);
+}
+.co-icon-edit {
+  mask-image: url(/icons/solar-linear/pen-new-square.svg);
+}
+.co-icon-trash {
+  mask-image: url(/icons/solar-linear/trash-bin-minimalistic.svg);
+}
+.co-icon-eye {
+  mask-image: url(/icons/solar-linear/eye.svg);
+}
+.co-icon-upload {
+  mask-image: url(/icons/solar-linear/upload-minimalistic.svg);
+}
+.co-icon-download {
+  mask-image: url(/icons/solar-linear/download-minimalistic.svg);
+}
+.co-icon-menu {
+  mask-image: url(/icons/solar-linear/hamburger-menu.svg);
+}
+.co-icon-tag {
+  mask-image: url(/icons/solar-linear/tag.svg);
+}
+.co-icon-clock {
+  mask-image: url(/icons/solar-linear/clock-circle.svg);
+}
+.co-icon-check {
+  mask-image: url(/icons/solar-linear/check-read.svg);
+}
+.co-icon-close {
+  mask-image: url(/icons/solar-linear/close-circle.svg);
+}
+.co-icon-paragraph {
+  mask-image: url(/icons/solar-linear/text-square.svg);
+}
+.co-icon-heading {
+  mask-image: url(/icons/solar-linear/text-bold.svg);
+}
+.co-icon-quote {
+  mask-image: url(/icons/solar-linear/text-italic.svg);
+}
+.co-icon-list {
+  mask-image: url(/icons/solar-linear/list.svg);
+}
+.co-icon-code {
+  mask-image: url(/icons/solar-linear/code.svg);
+}
+.co-icon-divider {
+  mask-image: url(/icons/solar-linear/minus-square.svg);
+}
+.co-icon-button {
+  mask-image: url(/icons/solar-linear/cursor-square.svg);
+}
+.co-icon-html {
+  mask-image: url(/icons/solar-linear/code-square.svg);
+}
+.co-icon-logout {
+  mask-image: url(/icons/solar-linear/logout-2.svg);
+}
+.co-icon-up {
+  mask-image: url(/icons/solar-linear/alt-arrow-up.svg);
+}
+.co-icon-down {
+  mask-image: url(/icons/solar-linear/alt-arrow-down.svg);
+}
+.co-icon-external {
+  mask-image: url(/icons/solar-linear/arrow-right-up.svg);
+}
+.co-icon-back {
+  mask-image: url(/icons/solar-linear/arrow-left.svg);
+}
+.co-icon-spark {
+  mask-image: url(/icons/solar-linear/stars-minimalistic.svg);
+}
+.co-icon-person {
+  mask-image: url(/icons/solar-linear/user-rounded.svg);
+}
+.co-icon-email {
+  mask-image: url(/icons/solar-linear/letter.svg);
+}
+
 /* Shared Coordiation components; theme colors remain configurable. */
 :root {
   --pc-border: color-mix(in srgb, var(--theme-fg) 16%, transparent);
@@ -359,4 +487,40 @@ body > footer {
     margin: 40px 20px 0;
     padding: 24px 0;
   }
+}
+
+/* The same Solar Linear Icon component used by the workspace. */
+.icon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.read-link {
+  align-items: center;
+  gap: 12px;
+}
+.read-link .co-icon,
+.icon-link .co-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.comment-heading,
+.comment-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-heading .co-icon {
+  width: 24px;
+  height: 24px;
+}
+.comment-label .co-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--pc-muted);
+}
+.pc-button .co-icon {
+  width: 18px;
+  height: 18px;
 }

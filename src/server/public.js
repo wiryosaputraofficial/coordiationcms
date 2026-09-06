@@ -1,3 +1,4 @@
+import { icon } from "../shared/icons.js";
 import { randomUUID } from "node:crypto";
 import { services, settings, publicPost, publishDue } from "./database.js";
 import {
@@ -125,7 +126,7 @@ export function loadPublic(request, { params }) {
         .all(post.id);
       const commentsHTML =
         post.comments_open && !site.hideComments
-          ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><strong>${escape(c.name)}</strong><p>${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<section class="comment-form"><h3>Leave a comment</h3><p>Join the conversation. Your email stays private, and comments are reviewed before publication.</p><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><div class="comment-fields"><label>Name<input autocomplete="name" name="name" required maxlength="100"></label><label>Email (not published)<input autocomplete="email" name="email" type="email" required maxlength="254"></label></div><label>Comment<textarea name="body" required maxlength="4000"></textarea></label><button type="submit">Submit comment</button></form></section>` : ""}</section>`
+          ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><strong>${escape(c.name)}</strong><p>${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<section class="comment-form"><h3 class="comment-heading">${icon("comments")} Leave a comment</h3><p>Join the conversation. Your email stays private, and comments are reviewed before publication.</p><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><div class="comment-fields"><label><span class="comment-label">${icon("person")} Name</span><input autocomplete="name" name="name" required maxlength="100"></label><label><span class="comment-label">${icon("email")} Email (not published)</span><input autocomplete="email" name="email" type="email" required maxlength="254"></label></div><label><span class="comment-label">${icon("edit")} Comment</span><textarea name="body" required maxlength="4000"></textarea></label><button type="submit">${icon("arrow")} Submit comment</button></form></section>` : ""}</section>`
           : "";
       return htmlResponse(
         document(

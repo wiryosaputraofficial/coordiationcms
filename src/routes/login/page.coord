@@ -6,7 +6,7 @@
       {#if needsSetup}<label>Full name<input name="name" autocomplete="name" required placeholder="Your name"></label><label>Site title<input name="title" required value="Studio Journal"></label><label>Setup token<input name="token" type="password" autocomplete="off" placeholder="Token from your server administrator"></label>{/if}
       <label>Email address<input name="email" type="email" autocomplete="username" required placeholder="you@example.com"></label><label>Password<input name="password" type="password" autocomplete="current-password" minlength="15" maxlength="256" required placeholder="At least 15 characters"></label>
       {#if needsSetup}<label class="check-label"><input name="demo" type="checkbox" checked>Add sample content to get started</label>{/if}
-      <p id="auth-error" class="form-error" role="alert" hidden></p><button class="button primary full" type="submit">{#if needsSetup}Create my site →{:else}Sign in to workspace →{/if}</button>
-    </form><a class="back-link" href="/">← Back to site</a>
+      <p id="auth-error" class="form-error" role="alert" hidden></p><button class="button primary full" type="submit">{#if needsSetup}Create my site <span class="icon co-icon co-icon-arrow" aria-hidden="true"></span>{:else}Sign in to workspace <span class="icon co-icon co-icon-arrow" aria-hidden="true"></span>{/if}</button>
+    </form><a class="back-link" href="/"><span class="icon co-icon co-icon-back" aria-hidden="true"></span> Back to site</a>
   </div></section>
 </main>

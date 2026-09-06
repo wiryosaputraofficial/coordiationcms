@@ -119,3 +119,9 @@
 .co-icon-spark {
   mask-image: url(/icons/solar-linear/stars-minimalistic.svg);
 }
+.co-icon-person {
+  mask-image: url(/icons/solar-linear/user-rounded.svg);
+}
+.co-icon-email {
+  mask-image: url(/icons/solar-linear/letter.svg);
+}

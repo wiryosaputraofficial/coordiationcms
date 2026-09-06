@@ -3283,3 +3283,31 @@ th:last-child:not(:first-child) {
     justify-self: stretch;
   }
 }
+
+/* Inline navigation and status icons share the Coordiation Icon component. */
+.text-link,
+.site-link,
+.back-link,
+.site-switch small,
+.seo-checks strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.site-switch small .co-icon,
+.mini-nav .co-icon {
+  width: 14px;
+  height: 14px;
+}
+.text-link .co-icon,
+.site-link .co-icon,
+.back-link .co-icon,
+.seo-checks .co-icon {
+  width: 16px;
+  height: 16px;
+}
+.revisions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

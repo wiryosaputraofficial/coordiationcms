@@ -30,6 +30,13 @@ function initialize() {
         id: "cms-002-theme-api-key",
         sql: `UPDATE themes SET manifest = json_remove(json_set(manifest, '$.cmsVersion', json_extract(manifest, '$.cmsVersionon')), '$.cmsVersionon') WHERE json_type(manifest, '$.cmsVersionon') IS NOT NULL AND json_type(manifest, '$.cmsVersion') IS NULL;`,
       },
+      {
+        id: "cms-003-component-icons",
+        sql: `UPDATE themes SET manifest = json_set(manifest, '$.home', replace(json_extract(manifest, '$.home'), 'Read story <span>↗</span>', 'Read story <span class="icon co-icon co-icon-external" aria-hidden="true"></span>')) WHERE instr(json_extract(manifest, '$.home'), 'Read story <span>↗</span>') > 0;
+UPDATE themes SET manifest = json_set(manifest, '$.home', replace(json_extract(manifest, '$.home'), '<a href="{{previous}}">← Previous</a>', '<a class="icon-link" href="{{previous}}"><span class="icon co-icon co-icon-back" aria-hidden="true"></span> Previous</a>')) WHERE instr(json_extract(manifest, '$.home'), '<a href="{{previous}}">← Previous</a>') > 0;
+UPDATE themes SET manifest = json_set(manifest, '$.home', replace(json_extract(manifest, '$.home'), '<a href="{{next}}">Next →</a>', '<a class="icon-link" href="{{next}}">Next <span class="icon co-icon co-icon-arrow" aria-hidden="true"></span></a>')) WHERE instr(json_extract(manifest, '$.home'), '<a href="{{next}}">Next →</a>') > 0;
+UPDATE themes SET manifest = json_set(manifest, '$.single', replace(json_extract(manifest, '$.single'), '<a href="/">← All stories</a>', '<a class="icon-link" href="/"><span class="icon co-icon co-icon-back" aria-hidden="true"></span> All stories</a>')) WHERE instr(json_extract(manifest, '$.single'), '<a href="/">← All stories</a>') > 0;`,
+      },
     ],
   });
   const auth = createPasswordAuth({

@@ -359,3 +359,39 @@ body > footer {
     padding: 24px 0;
   }
 }
+
+/* The same Solar Linear Icon component used by the workspace. */
+.icon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.read-link {
+  align-items: center;
+  gap: 12px;
+}
+.read-link .co-icon,
+.icon-link .co-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.comment-heading,
+.comment-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-heading .co-icon {
+  width: 24px;
+  height: 24px;
+}
+.comment-label .co-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--pc-muted);
+}
+.pc-button .co-icon {
+  width: 18px;
+  height: 18px;
+}

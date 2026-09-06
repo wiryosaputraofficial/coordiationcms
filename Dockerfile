@@ -16,6 +16,7 @@ COPY --from=build --chown=node:node /app/.coordiation ./.coordiation
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --chown=node:node scripts ./scripts
 COPY --chown=node:node src/server ./src/server
+COPY --chown=node:node src/shared ./src/shared
 COPY package.json ./
 RUN mkdir /data && chown node:node /data
 USER node
