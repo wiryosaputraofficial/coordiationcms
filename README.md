@@ -4,7 +4,23 @@ An English-language, self-hosted publishing CMS built on **Coordiation Fullstack
 
 The interface follows [coordiation.com](https://coordiation.com): Geist typography, monochrome surfaces, fine borders, and black primary buttons. The supplied Coordiation logo, self-hosted Geist fonts, and official Coordiation Solar Linear icons are included. Native component recipes come from the Coordiation monochrome registry; see [Design system](docs/DESIGN-SYSTEM.md).
 
-## Run locally
+## Create a site with npm
+
+Requires Node.js 22.18 or newer (Node 24 recommended).
+
+```sh
+npx coordiation-cms init my-site
+cd my-site
+npm install
+npm run build
+npm start
+```
+
+The initializer copies the CMS source into a new directory. It does not install dependencies, start servers, or overwrite an existing project. Each project gets its own database and administrator setup. No shared demo account or API key is bundled.
+
+Open **http://127.0.0.1:3118/login** to create your administrator. See the [live showcase](https://coordiation.com/cms) and [public preview](https://app.coordiation.com/). For production, update the domain and private environment settings as described in [Deployment](docs/DEPLOYMENT.md).
+
+## Run from GitHub
 
 Requires Node.js 22.18+ (Node 24 is used by the deployment image).
 
@@ -28,7 +44,7 @@ Data lives in `data/cms.sqlite`. Override the location with `CMS_DATABASE`. `.en
 - Public comments with moderation, spam/trash states, and basic rate limiting.
 - Administrator, editor, author, contributor, and subscriber roles; profile editing and password changes.
 - Native theme installation, preview, activation, source editing, cloning, removal, and ZIP export.
-- Four sample themes: Folio, Gazette, Mono, and Teraform. Ready-made ZIPs are in `theme-packages/`.
+- Four sample themes: Folio, Gazette, Mono, and Teraform. Generate distributable ZIPs with `node scripts/export-themes.js`.
 - Flat navigation menus, site identity, accent color, static homepage selection, and reading settings.
 - Two built-in extensions: reading time and table of contents.
 - Server-rendered pages, SEO controls and meter, social metadata, article JSON-LD, RSS, sitemap, and an optional AI-readable content index.
@@ -62,3 +78,7 @@ See [Deployment](docs/DEPLOYMENT.md), [Security](docs/SECURITY.md), and [Feature
 This is a working **0.1 release foundation**, not complete WordPress feature parity or a production certification. Coordiation Fullstack itself is an alpha. The feature matrix explicitly identifies capabilities that are not implemented; do not advertise full WordPress compatibility.
 
 Official references: [Coordiation Fullstack installation](https://coordiation.com/docs/installation/using-fullstack), [WordPress core features](https://wordpress.org/about/features/). Font licensing is retained in `public/fonts/OFL.txt`; package dependencies retain their own licenses. The manifest's theme license field should reflect the distribution terms chosen by the theme author.
+
+## License
+
+The CMS core is MIT licensed. Included fonts and icons retain their attribution and licenses in `public/fonts/OFL.txt` and `public/icons/ATTRIBUTION.txt`. Separately distributed premium themes may use their own license terms.
