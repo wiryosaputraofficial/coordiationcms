@@ -155,6 +155,7 @@ function nav() {
         ["pages", "Pages"],
         ["media", "Media"],
         ["comments", "Comments"],
+        ["inquiries", "Form inbox"],
       ],
     ],
     [
@@ -183,6 +184,7 @@ function nav() {
           (id === "pages" && isEditor()) ||
           (id === "media" && canUpload()) ||
           (id === "comments" && isEditor()) ||
+          (id === "inquiries" && isAdmin()) ||
           ([
             "themes",
             "menus",
@@ -194,7 +196,7 @@ function nav() {
             isAdmin()),
       );
       return filtered.length
-        ? `<div class="nav-label">${label}</div>${filtered.map(([id, name]) => `<a href="#${id}" class="nav-item" data-nav="${id}">${icon(id === "menus" ? "menu" : id)}<span>${name}</span>${id === "comments" && dashboard.commentCount ? `<span class="nav-count">${dashboard.commentCount}</span>` : ""}</a>`).join("")}`
+        ? `<div class="nav-label">${label}</div>${filtered.map(([id, name]) => `<a href="#${id}" class="nav-item" data-nav="${id}">${icon(id === "menus" ? "menu" : id === "inquiries" ? "email" : id)}<span>${name}</span>${id === "comments" && dashboard.commentCount ? `<span class="nav-count">${dashboard.commentCount}</span>` : ""}</a>`).join("")}`
         : "";
     })
     .join("");
@@ -1066,11 +1068,7 @@ async function renderPlugins() {
 }
 async function renderTools() {
   $("#workspace").innerHTML =
-    heading(
-      "Tools",
-      "Move your content and keep ownership of your data.",
-      `<a class="button" href="#inquiries">${icon("email")} Form inbox</a>`,
-    ) +
+    heading("Tools", "Move your content and keep ownership of your data.") +
     `<div class="tools-grid">${card("Import content", "Bring posts and pages into your workspace.", `<form id="import-form" class="ui-form">${field("import-format", "Source format", `<select id="import-format" name="format"><option value="wordpress">WordPress WXR (.xml)</option><option value="coordiation">Coordiation (.json)</option></select>`)}${field("import-file", "Content file", `<input class="ui-file-input" type="file" id="import-file" accept=".xml,.json" required aria-describedby="import-file-hint">`, "Choose a JSON or XML export, up to 700 KB.")}<div class="ui-info"><strong>What gets imported</strong><p>Up to 200 posts or pages, with supported content and taxonomy. Duplicate slugs receive a suffix. Media files and user accounts are not imported.</p></div><button class="button primary" type="submit">${icon("upload")} Import content</button></form>`, icon("upload"))}
       ${card("Export content", "Keep a portable copy of your published work and drafts.", `<div class="ui-info"><strong>Included in your export</strong><p>Posts, pages, blocks, categories, and tags in the Coordiation JSON format.</p></div><a class="button" href="/api/cms/export">${icon("download")} Download JSON export</a><p class="field-hint">This content export does not include media files or user accounts. Full database backups are managed on the server.</p>`, icon("download"))}</div>`;
   bind("#import-form", "submit", async (e) => {
@@ -1099,7 +1097,6 @@ async function renderInquiries() {
     heading(
       "Form inbox",
       "Contact messages and newsletter requests received by your site.",
-      `<a class="button" href="#tools">${icon("back")} Tools</a>`,
     ) +
     (items.length
       ? `<div class="component-stack">${items.map((item) => card(item.kind === "newsletter" ? "Newsletter request" : item.name, `${item.email} · ${time(item.created_at)}`, `<p class="inquiry-message">${esc(item.message || "This visitor requested newsletter updates.")}</p><p class="field-hint">${esc(JSON.parse(item.services).join(", "))}${item.budget ? " · " + esc(item.budget) : ""}</p>`, icon(item.kind === "newsletter" ? "email" : "comments"))).join("")}</div>`

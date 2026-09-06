@@ -62,7 +62,7 @@ The renderer supplies `homepageContent`, `homepageHeader`, and `homepageFooter` 
 
 ZIP packages still contain only `theme.json`. Uploaded media is not embedded; move referenced media separately or use stable HTTPS URLs when distributing a theme. Teraform's bundled `/theme-assets/teraform/` SVG artwork is included in this CMS release and uses original artwork, not assets from the reference site. The design takes inspiration from [the supplied reference](https://formix.framer.website/), with original branding, copy, and illustrations.
 
-Teraform contact and newsletter forms submit to the built-in inbox. Administrators read submissions from **Tools → Form inbox**. This does not send email or connect a mailing service. Custom theme authors must follow the form field contract in `src/server/inquiries.js`; only the active theme can accept submissions.
+Teraform contact and newsletter forms submit to the built-in inbox. Administrators read submissions from **Form inbox**. This does not send email or connect a mailing service. Custom theme authors must follow the form field contract in `src/server/inquiries.js`; only the active theme can accept submissions.
 
 ### Motion settings
 
