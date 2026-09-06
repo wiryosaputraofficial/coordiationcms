@@ -1,0 +1,121 @@
+.icon.co-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  vertical-align: middle;
+  stroke: none;
+  fill: none;
+}
+.co-icon-dashboard {
+  mask-image: url(/icons/solar-linear/widget-2.svg);
+}
+.co-icon-posts {
+  mask-image: url(/icons/solar-linear/document-text.svg);
+}
+.co-icon-pages {
+  mask-image: url(/icons/solar-linear/documents.svg);
+}
+.co-icon-media {
+  mask-image: url(/icons/solar-linear/gallery-minimalistic.svg);
+}
+.co-icon-comments {
+  mask-image: url(/icons/solar-linear/chat-round-dots.svg);
+}
+.co-icon-themes {
+  mask-image: url(/icons/solar-linear/palette-round.svg);
+}
+.co-icon-plugins {
+  mask-image: url(/icons/solar-linear/plug-circle.svg);
+}
+.co-icon-users {
+  mask-image: url(/icons/solar-linear/users-group-rounded.svg);
+}
+.co-icon-settings {
+  mask-image: url(/icons/solar-linear/settings-minimalistic.svg);
+}
+.co-icon-tools {
+  mask-image: url(/icons/solar-linear/tuning-2.svg);
+}
+.co-icon-plus {
+  mask-image: url(/icons/solar-linear/add-square.svg);
+}
+.co-icon-arrow {
+  mask-image: url(/icons/solar-linear/arrow-right.svg);
+}
+.co-icon-edit {
+  mask-image: url(/icons/solar-linear/pen-new-square.svg);
+}
+.co-icon-trash {
+  mask-image: url(/icons/solar-linear/trash-bin-minimalistic.svg);
+}
+.co-icon-eye {
+  mask-image: url(/icons/solar-linear/eye.svg);
+}
+.co-icon-upload {
+  mask-image: url(/icons/solar-linear/upload-minimalistic.svg);
+}
+.co-icon-download {
+  mask-image: url(/icons/solar-linear/download-minimalistic.svg);
+}
+.co-icon-menu {
+  mask-image: url(/icons/solar-linear/hamburger-menu.svg);
+}
+.co-icon-tag {
+  mask-image: url(/icons/solar-linear/tag.svg);
+}
+.co-icon-clock {
+  mask-image: url(/icons/solar-linear/clock-circle.svg);
+}
+.co-icon-check {
+  mask-image: url(/icons/solar-linear/check-read.svg);
+}
+.co-icon-close {
+  mask-image: url(/icons/solar-linear/close-circle.svg);
+}
+.co-icon-paragraph {
+  mask-image: url(/icons/solar-linear/text-square.svg);
+}
+.co-icon-heading {
+  mask-image: url(/icons/solar-linear/text-bold.svg);
+}
+.co-icon-quote {
+  mask-image: url(/icons/solar-linear/text-italic.svg);
+}
+.co-icon-list {
+  mask-image: url(/icons/solar-linear/list.svg);
+}
+.co-icon-code {
+  mask-image: url(/icons/solar-linear/code.svg);
+}
+.co-icon-divider {
+  mask-image: url(/icons/solar-linear/minus-square.svg);
+}
+.co-icon-button {
+  mask-image: url(/icons/solar-linear/cursor-square.svg);
+}
+.co-icon-html {
+  mask-image: url(/icons/solar-linear/code-square.svg);
+}
+.co-icon-logout {
+  mask-image: url(/icons/solar-linear/logout-2.svg);
+}
+.co-icon-up {
+  mask-image: url(/icons/solar-linear/alt-arrow-up.svg);
+}
+.co-icon-down {
+  mask-image: url(/icons/solar-linear/alt-arrow-down.svg);
+}
+.co-icon-external {
+  mask-image: url(/icons/solar-linear/arrow-right-up.svg);
+}
+.co-icon-back {
+  mask-image: url(/icons/solar-linear/arrow-left.svg);
+}
+.co-icon-spark {
+  mask-image: url(/icons/solar-linear/stars-minimalistic.svg);
+}

@@ -1,0 +1,9 @@
+node_modules
+.coordiation
+.git
+.env
+data
+tests
+docs
+*.zip
+*.tar.gz

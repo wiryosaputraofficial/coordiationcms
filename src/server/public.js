@@ -1,0 +1,295 @@
+import { randomUUID } from "node:crypto";
+import { services, settings, publicPost, publishDue } from "./database.js";
+import {
+  currentUser,
+  canEdit,
+  endpoint,
+  sameOrigin,
+  text,
+  fail,
+  rateLimit,
+} from "./security.js";
+import { renderBlocks, escape } from "./content.js";
+import { renderTheme } from "./themes.js";
+
+const htmlResponse = (body, status = 200) =>
+  new Response(body, {
+    status,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy":
+        "default-src 'none'; style-src 'self'; font-src 'self'; img-src 'self' https:; form-action 'self'; base-uri 'none'; frame-ancestors 'self'",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+    },
+  });
+function viewPost(p, terms) {
+  const { db } = services(),
+    media = p.featured_id
+      ? db.prepare("SELECT id,alt FROM media WHERE id=?").get(p.featured_id)
+      : null;
+  return {
+    ...p,
+    category:
+      terms.find((t) => p.categories.includes(t.id))?.name ||
+      (p.type === "page" ? "Page" : "Journal"),
+    date: new Date(p.publish_at || p.created_at).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }),
+    image: media ? `/media/${media.id}` : "",
+    imageAlt: media?.alt || "",
+    author:
+      db.prepare("SELECT name FROM profiles WHERE id=?").get(p.author_id)
+        ?.name || "",
+    readingTime: settings().plugins.includes("reading-time")
+      ? Math.max(
+          1,
+          Math.ceil(
+            p.blocks
+              .map((b) => b.content)
+              .join(" ")
+              .split(/\s+/).length / 200,
+          ),
+        )
+      : null,
+  };
+}
+function document(
+  title,
+  description,
+  body,
+  path,
+  preview = false,
+  site = settings(),
+) {
+  const origin = process.env.CMS_ORIGIN || "http://127.0.0.1:3118";
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)} — ${escape(site.title)}</title><meta name="description" content="${escape(description)}"><link rel="canonical" href="${escape(origin + path)}"><meta property="og:title" content="${escape(title)}"><meta property="og:description" content="${escape(description)}"><meta name="robots" content="${preview ? "noindex,nofollow" : "index,follow"}"><link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
+}
+export function loadPublic(request, { params }) {
+  return endpoint(() => {
+    const { db } = services();
+    publishDue();
+    const url = new URL(request.url),
+      site = settings(),
+      user = currentUser(request),
+      preview = url.searchParams.has("preview");
+    if (preview && !user) fail(401, "Sign in to view previews.");
+    if (url.searchParams.get("theme")) {
+      if (user?.role !== "administrator") fail(403, "Access denied.");
+      site.activeTheme = url.searchParams.get("theme");
+    }
+    const themeRow = db
+      .prepare("SELECT manifest FROM themes WHERE id=?")
+      .get(site.activeTheme);
+    if (!themeRow) fail(404, "Theme not found.");
+    const theme = JSON.parse(themeRow.manifest);
+    const terms = db.prepare("SELECT * FROM terms").all();
+    let row = params?.slug
+      ? db.prepare("SELECT * FROM posts WHERE slug=?").get(params.slug)
+      : site.homepage
+        ? db.prepare("SELECT * FROM posts WHERE id=?").get(site.homepage)
+        : null;
+    if (params?.slug && !row)
+      return htmlResponse(
+        document(
+          "Not found",
+          "Page not found.",
+          '<main class="single"><h1>Page not found.</h1><a href="/">Back to home</a></main>',
+          url.pathname,
+          true,
+        ),
+        404,
+      );
+    if (row) {
+      const post = publicPost(row);
+      const isPublic =
+        post.status === "published" && post.visibility === "public";
+      if (!isPublic && (!preview || !user || !canEdit(user, post)))
+        return htmlResponse(
+          document(
+            "Not found",
+            "",
+            '<main class="single"><h1>Page not found.</h1><a href="/">Back to home</a></main>',
+            url.pathname,
+            true,
+          ),
+          404,
+        );
+      const comments = db
+        .prepare(
+          "SELECT name,body,created_at FROM comments WHERE post_id=? AND status='approved' ORDER BY created_at LIMIT 200",
+        )
+        .all(post.id);
+      const commentsHTML = post.comments_open
+        ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><strong>${escape(c.name)}</strong><p>${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<h3>Leave a comment</h3><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><label>Name<input name="name" required maxlength="100"></label><label>Email (not published)<input name="email" type="email" required maxlength="254"></label><label>Comments<textarea name="body" required maxlength="4000"></textarea></label><button type="submit">Submit comment</button></form>` : ""}</section>`
+        : "";
+      return htmlResponse(
+        document(
+          post.title,
+          post.excerpt,
+          renderTheme(theme.single, {
+            site,
+            menu: site.menu,
+            post: viewPost(post, terms),
+            content: renderBlocks(post.blocks, site.plugins),
+            comments: commentsHTML,
+          }),
+          url.pathname,
+          preview || !isPublic,
+          site,
+        ),
+      );
+    }
+    const query = (url.searchParams.get("q") || "").slice(0, 200),
+      term = url.searchParams.get("term"),
+      page = Math.max(
+        1,
+        Math.min(100000, Number.parseInt(url.searchParams.get("page")) || 1),
+      ),
+      size = site.postsPerPage;
+    const q = query.replace(/[\\%_]/g, "\\$&");
+    let posts = db
+      .prepare(
+        "SELECT * FROM posts WHERE status='published' AND visibility='public' AND type='post' AND (title LIKE ? ESCAPE '\\' OR excerpt LIKE ? ESCAPE '\\') ORDER BY COALESCE(publish_at,created_at) DESC LIMIT 10000",
+      )
+      .all(`%${q}%`, `%${q}%`)
+      .map(publicPost);
+    if (term)
+      posts = posts.filter(
+        (p) => p.categories.includes(term) || p.tags.includes(term),
+      );
+    const total = posts.length;
+    posts = posts
+      .slice((page - 1) * size, page * size)
+      .map((p) => viewPost(p, terms));
+    const link = (n) => {
+      const s = new URLSearchParams({ page: String(n) });
+      if (query) s.set("q", query);
+      if (term) s.set("term", term);
+      if (preview) {
+        s.set("preview", "1");
+        s.set("theme", site.activeTheme);
+      }
+      return "/?" + s;
+    };
+    return htmlResponse(
+      document(
+        query ? `Search: ${query}` : site.title,
+        site.tagline,
+        renderTheme(theme.home, {
+          site,
+          menu: site.menu,
+          posts,
+          query,
+          previous: page > 1 ? link(page - 1) : "",
+          next: page * size < total ? link(page + 1) : "",
+        }),
+        url.pathname,
+        preview || !!query || !!term,
+        site,
+      ),
+    );
+  });
+}
+export function themeCSS(request) {
+  return endpoint(() => {
+    const { db } = services(),
+      s = settings(),
+      id = new URL(request.url).searchParams.get("preview");
+    if (
+      id &&
+      (!currentUser(request) ||
+        (id !== s.activeTheme &&
+          currentUser(request)?.role !== "administrator"))
+    )
+      fail(403, "Access denied.");
+    const row = db
+      .prepare("SELECT manifest FROM themes WHERE id=?")
+      .get(id || s.activeTheme);
+    if (!row) fail(404, "Theme not found.");
+    const t = JSON.parse(row.manifest);
+    return new Response(
+      `@font-face{font-family:Geist;src:url(/fonts/geist-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}:root{--accent:${id ? t.accent : s.accent};--theme-bg:${t.background};--theme-fg:${t.foreground}}${t.css}`,
+      {
+        headers: {
+          "Content-Type": "text/css; charset=utf-8",
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      },
+    );
+  });
+}
+export function mediaGET(request, { params }) {
+  return endpoint(() => {
+    const m = services()
+      .db.prepare("SELECT bytes,mime FROM media WHERE id=?")
+      .get(params.id);
+    if (!m) fail(404, "Media not found.");
+    return new Response(m.bytes, {
+      headers: {
+        "Content-Type": m.mime,
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "public, max-age=3600",
+        "Content-Security-Policy": "default-src 'none'",
+      },
+    });
+  });
+}
+export function commentPOST(request) {
+  return endpoint(async () => {
+    sameOrigin(request);
+    const { db } = services(),
+      f = await request.formData(),
+      p = db
+        .prepare(
+          "SELECT id,slug,comments_open FROM posts WHERE id=? AND status='published' AND visibility='public'",
+        )
+        .get(String(f.get("postId")));
+    if (!p || !p.comments_open || !settings().allowComments)
+      fail(403, "Comments are closed.");
+    const email = text(String(f.get("email") || ""), 254, true).toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail(400, "Invalid email.");
+    rateLimit("comment:global", 100);
+    rateLimit("comment:" + email, 3);
+    db.prepare("INSERT INTO comments VALUES (?,?,?,?,?,?,?)").run(
+      randomUUID(),
+      p.id,
+      text(String(f.get("name") || ""), 100, true),
+      email,
+      text(String(f.get("body") || ""), 4000, true),
+      "pending",
+      new Date().toISOString(),
+    );
+    return new Response(null, {
+      status: 303,
+      headers: { Location: `/${p.slug}?comment=pending` },
+    });
+  });
+}
+export function sitemap() {
+  publishDue();
+  return services()
+    .db.prepare(
+      "SELECT slug,updated_at FROM posts WHERE status='published' AND visibility='public'",
+    )
+    .all()
+    .map((p) => ({ params: { slug: p.slug }, lastModified: p.updated_at }));
+}
+export function feedGET() {
+  const s = settings(),
+    origin = process.env.CMS_ORIGIN || "http://127.0.0.1:3118";
+  publishDue();
+  const posts = services()
+    .db.prepare(
+      "SELECT * FROM posts WHERE status='published' AND visibility='public' AND type='post' ORDER BY COALESCE(publish_at,created_at) DESC LIMIT 30",
+    )
+    .all();
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${escape(s.title)}</title><link>${escape(origin)}</link><description>${escape(s.tagline)}</description>${posts.map((p) => `<item><title>${escape(p.title)}</title><link>${escape(origin + "/" + p.slug)}</link><guid>${escape(origin + "/" + p.slug)}</guid><description>${escape(p.excerpt)}</description><pubDate>${new Date(p.publish_at || p.created_at).toUTCString()}</pubDate></item>`).join("")}</channel></rss>`,
+    { headers: { "Content-Type": "application/rss+xml; charset=utf-8" } },
+  );
+}

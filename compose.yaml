@@ -1,0 +1,52 @@
+services:
+  cms:
+    build:
+      context: .
+      args:
+        CMS_ORIGIN: https://app.coordiation.com
+    image: coordiation-cms:0.1.0
+    container_name: coordiation-cms
+    restart: unless-stopped
+    init: true
+    env_file: .env
+    environment:
+      CMS_DATABASE: /data/cms.sqlite
+      CMS_ORIGIN: https://app.coordiation.com
+      CMS_SECURE_COOKIES: "true"
+    volumes:
+      - cms-data:/data
+    networks:
+      - proxy_public
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 768m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: proxy_public
+      traefik.http.routers.coordiation-cms.rule: Host(`app.coordiation.com`)
+      traefik.http.routers.coordiation-cms.entrypoints: websecure
+      traefik.http.routers.coordiation-cms.tls: "true"
+      traefik.http.routers.coordiation-cms.tls.certresolver: letsencrypt
+      traefik.http.routers.coordiation-cms.middlewares: coordiation-cms-security,coordiation-cms-rate
+      traefik.http.middlewares.coordiation-cms-security.headers.contentTypeNosniff: "true"
+      traefik.http.middlewares.coordiation-cms-security.headers.referrerPolicy: strict-origin-when-cross-origin
+      traefik.http.middlewares.coordiation-cms-security.headers.customFrameOptionsValue: SAMEORIGIN
+      traefik.http.middlewares.coordiation-cms-rate.ratelimit.average: "30"
+      traefik.http.middlewares.coordiation-cms-rate.ratelimit.burst: "60"
+      traefik.http.services.coordiation-cms.loadbalancer.server.port: "3100"
+volumes:
+  cms-data:
+networks:
+  proxy_public:
+    external: true

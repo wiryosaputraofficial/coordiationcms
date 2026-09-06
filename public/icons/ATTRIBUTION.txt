@@ -1,0 +1,6 @@
+Solar Linear icons by 480 Design, distributed through the Coordiation icon registry.
+Source: https://coordiation.com/icon-registry.json
+Upstream: @solar-icons/static 2.0.1
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+SVG artwork is unmodified. The CMS uses CSS masks to inherit the surrounding text color.

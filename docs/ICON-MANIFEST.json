@@ -1,0 +1,188 @@
+{
+  "registry": "https://coordiation.com/icon-registry.json",
+  "version": "1.0.0-rc.1",
+  "collection": "solar-linear",
+  "license": "CC BY 4.0",
+  "icons": [
+    {
+      "key": "dashboard",
+      "name": "widget-2",
+      "asset": "/icons/solar-linear/widget-2.svg"
+    },
+    {
+      "key": "posts",
+      "name": "document-text",
+      "asset": "/icons/solar-linear/document-text.svg"
+    },
+    {
+      "key": "pages",
+      "name": "documents",
+      "asset": "/icons/solar-linear/documents.svg"
+    },
+    {
+      "key": "media",
+      "name": "gallery-minimalistic",
+      "asset": "/icons/solar-linear/gallery-minimalistic.svg"
+    },
+    {
+      "key": "comments",
+      "name": "chat-round-dots",
+      "asset": "/icons/solar-linear/chat-round-dots.svg"
+    },
+    {
+      "key": "themes",
+      "name": "palette-round",
+      "asset": "/icons/solar-linear/palette-round.svg"
+    },
+    {
+      "key": "plugins",
+      "name": "plug-circle",
+      "asset": "/icons/solar-linear/plug-circle.svg"
+    },
+    {
+      "key": "users",
+      "name": "users-group-rounded",
+      "asset": "/icons/solar-linear/users-group-rounded.svg"
+    },
+    {
+      "key": "settings",
+      "name": "settings-minimalistic",
+      "asset": "/icons/solar-linear/settings-minimalistic.svg"
+    },
+    {
+      "key": "tools",
+      "name": "tuning-2",
+      "asset": "/icons/solar-linear/tuning-2.svg"
+    },
+    {
+      "key": "plus",
+      "name": "add-square",
+      "asset": "/icons/solar-linear/add-square.svg"
+    },
+    {
+      "key": "arrow",
+      "name": "arrow-right",
+      "asset": "/icons/solar-linear/arrow-right.svg"
+    },
+    {
+      "key": "edit",
+      "name": "pen-new-square",
+      "asset": "/icons/solar-linear/pen-new-square.svg"
+    },
+    {
+      "key": "trash",
+      "name": "trash-bin-minimalistic",
+      "asset": "/icons/solar-linear/trash-bin-minimalistic.svg"
+    },
+    {
+      "key": "eye",
+      "name": "eye",
+      "asset": "/icons/solar-linear/eye.svg"
+    },
+    {
+      "key": "upload",
+      "name": "upload-minimalistic",
+      "asset": "/icons/solar-linear/upload-minimalistic.svg"
+    },
+    {
+      "key": "download",
+      "name": "download-minimalistic",
+      "asset": "/icons/solar-linear/download-minimalistic.svg"
+    },
+    {
+      "key": "menu",
+      "name": "hamburger-menu",
+      "asset": "/icons/solar-linear/hamburger-menu.svg"
+    },
+    {
+      "key": "tag",
+      "name": "tag",
+      "asset": "/icons/solar-linear/tag.svg"
+    },
+    {
+      "key": "clock",
+      "name": "clock-circle",
+      "asset": "/icons/solar-linear/clock-circle.svg"
+    },
+    {
+      "key": "check",
+      "name": "check-read",
+      "asset": "/icons/solar-linear/check-read.svg"
+    },
+    {
+      "key": "close",
+      "name": "close-circle",
+      "asset": "/icons/solar-linear/close-circle.svg"
+    },
+    {
+      "key": "paragraph",
+      "name": "text-square",
+      "asset": "/icons/solar-linear/text-square.svg"
+    },
+    {
+      "key": "heading",
+      "name": "text-bold",
+      "asset": "/icons/solar-linear/text-bold.svg"
+    },
+    {
+      "key": "quote",
+      "name": "text-italic",
+      "asset": "/icons/solar-linear/text-italic.svg"
+    },
+    {
+      "key": "list",
+      "name": "list",
+      "asset": "/icons/solar-linear/list.svg"
+    },
+    {
+      "key": "code",
+      "name": "code",
+      "asset": "/icons/solar-linear/code.svg"
+    },
+    {
+      "key": "divider",
+      "name": "minus-square",
+      "asset": "/icons/solar-linear/minus-square.svg"
+    },
+    {
+      "key": "button",
+      "name": "cursor-square",
+      "asset": "/icons/solar-linear/cursor-square.svg"
+    },
+    {
+      "key": "html",
+      "name": "code-square",
+      "asset": "/icons/solar-linear/code-square.svg"
+    },
+    {
+      "key": "logout",
+      "name": "logout-2",
+      "asset": "/icons/solar-linear/logout-2.svg"
+    },
+    {
+      "key": "up",
+      "name": "alt-arrow-up",
+      "asset": "/icons/solar-linear/alt-arrow-up.svg"
+    },
+    {
+      "key": "down",
+      "name": "alt-arrow-down",
+      "asset": "/icons/solar-linear/alt-arrow-down.svg"
+    },
+    {
+      "key": "external",
+      "name": "arrow-right-up",
+      "asset": "/icons/solar-linear/arrow-right-up.svg"
+    },
+    {
+      "key": "back",
+      "name": "arrow-left",
+      "asset": "/icons/solar-linear/arrow-left.svg"
+    },
+    {
+      "key": "spark",
+      "name": "stars-minimalistic",
+      "asset": "/icons/solar-linear/stars-minimalistic.svg"
+    }
+  ]
+}
