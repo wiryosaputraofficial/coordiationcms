@@ -123,15 +123,11 @@ const sections = [
       ),
       text("metricTwo", "Second metric value", "∞"),
       text("metricTwoLabel", "Second metric label", "Ideas worth exploring"),
+      img("coverageImage", "Coverage image", "/theme-assets/teraform/moss.svg"),
       text(
-        "coverageTitle",
-        "Coverage heading",
-        "From your first idea to the next launch",
-      ),
-      area(
-        "coverage",
-        "Capabilities, one per line",
-        "Brand direction\nVisual identity\nWeb design\nProduct interfaces\nCreative systems",
+        "coverageImageAlt",
+        "Coverage image description",
+        "Layered green sculpture",
       ),
       text("availability", "Availability value", "Let’s talk"),
       text(
@@ -146,7 +142,7 @@ const sections = [
         "Typical first concept, depending on scope",
       ),
     ],
-    template: `<section class="fx-section" id="about">${intro}<div class="fx-about-grid"><article class="fx-about-visual"><img src="{{image}}" alt="{{imageAlt}}"><div><p>{{cardLabel}}</p><h3>{{cardTitle}}</h3><div class="fx-metrics"><span><strong>{{metricOne}}</strong>{{metricOneLabel}}</span><span><strong>{{metricTwo}}</strong>{{metricTwoLabel}}</span></div></div></article><article class="fx-card fx-coverage"><h3>{{coverageTitle}}</h3><div class="fx-orbit" aria-hidden="true">${icon("spark")}</div><p class="fx-lines">{{coverage}}</p></article><div class="fx-stack"><article class="fx-card"><span class="fx-eyebrow">{{availabilityLabel}}</span><h3 class="fx-number">{{availability}}</h3><div class="fx-dots" aria-hidden="true"></div></article><article class="fx-card"><strong class="fx-number">{{turnaround}}</strong><p>{{turnaroundLabel}}</p><div class="fx-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div></article></div></div></section>`,
+    template: `<section class="fx-section" id="about">${intro}<div class="fx-about-grid"><article class="fx-about-visual"><img src="{{image}}" alt="{{imageAlt}}"><div><p>{{cardLabel}}</p><h3>{{cardTitle}}</h3><div class="fx-metrics"><span><strong>{{metricOne}}</strong>{{metricOneLabel}}</span><span><strong>{{metricTwo}}</strong>{{metricTwoLabel}}</span></div></div></article><article class="fx-card fx-coverage">{{#if coverageImage}}<img class="fx-coverage-image" src="{{coverageImage}}" alt="{{coverageImageAlt}}" loading="lazy">{{/if}}</article><div class="fx-stack"><article class="fx-card"><span class="fx-eyebrow">{{availabilityLabel}}</span><h3 class="fx-number">{{availability}}</h3><div class="fx-dots" aria-hidden="true"></div></article><article class="fx-card"><strong class="fx-number">{{turnaround}}</strong><p>{{turnaroundLabel}}</p><div class="fx-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div></article></div></div></section>`,
   },
   {
     id: "services",

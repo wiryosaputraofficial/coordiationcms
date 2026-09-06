@@ -1,6 +1,7 @@
 import { openDatabase } from "@coordiation/fullstack/database";
 import { createPasswordAuth } from "@coordiation/fullstack/auth";
 import { resolve } from "node:path";
+import { teraformCoverageImageMigration } from "./teraform-migrations.js";
 import { builtInThemes } from "./themes.js";
 
 const filename = resolve(process.env.CMS_DATABASE || "data/cms.sqlite");
@@ -41,6 +42,10 @@ UPDATE themes SET manifest = json_set(manifest, '$.single', replace(json_extract
         id: "cms-004-theme-homepages",
         sql: `CREATE TABLE theme_homepages (theme_id TEXT PRIMARY KEY REFERENCES themes(id) ON DELETE CASCADE, data TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1) STRICT;
 CREATE TABLE inquiries (id TEXT PRIMARY KEY, theme_id TEXT NOT NULL, kind TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, message TEXT NOT NULL, services TEXT NOT NULL, budget TEXT NOT NULL, created_at TEXT NOT NULL) STRICT;`,
+      },
+      {
+        id: "cms-005-teraform-coverage-image",
+        sql: teraformCoverageImageMigration,
       },
     ],
   });
