@@ -4,3 +4,6 @@ export const teraformCoverageImageMigration =
 
 export const teraformFeedbackIconMigration =
   "UPDATE themes SET manifest=json_set(manifest,'$.homepage.sections',json((SELECT json_group_array(json(CASE WHEN json_extract(s.value,'$.id')='reviews' THEN json_set(s.value,'$.template',replace(json_extract(s.value,'$.template'),'<p class=\"fx-eyebrow\"><span class=\"icon co-icon co-icon-spark\" aria-hidden=\"true\"></span> {{rating}}</p>','<p class=\"fx-eyebrow\">{{rating}}</p>')) ELSE s.value END)) FROM json_each(manifest,'$.homepage.sections') AS s))) WHERE id='teraform';";
+
+export const teraformBlogCenterMigration =
+  "UPDATE themes SET manifest=json_set(manifest,'$.css',json_extract(manifest,'$.css') || '.fx-site .fx-blog{width:100%;max-width:1280px;margin:0 auto}.fx-blog-grid>.fx-blog-card:only-child{grid-column:1/-1;width:min(100%,600px);justify-self:center}') WHERE id='teraform';";

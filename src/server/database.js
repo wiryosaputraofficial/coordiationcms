@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import {
   teraformCoverageImageMigration,
   teraformFeedbackIconMigration,
+  teraformBlogCenterMigration,
 } from "./teraform-migrations.js";
 import { builtInThemes } from "./themes.js";
 
@@ -54,6 +55,7 @@ CREATE TABLE inquiries (id TEXT PRIMARY KEY, theme_id TEXT NOT NULL, kind TEXT N
         id: "cms-006-teraform-feedback-label",
         sql: teraformFeedbackIconMigration,
       },
+      { id: "cms-007-teraform-blog-center", sql: teraformBlogCenterMigration },
     ],
   });
   const auth = createPasswordAuth({
