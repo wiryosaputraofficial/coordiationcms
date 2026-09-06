@@ -1,7 +1,10 @@
 import { openDatabase } from "@coordiation/fullstack/database";
 import { createPasswordAuth } from "@coordiation/fullstack/auth";
 import { resolve } from "node:path";
-import { teraformCoverageImageMigration } from "./teraform-migrations.js";
+import {
+  teraformCoverageImageMigration,
+  teraformFeedbackIconMigration,
+} from "./teraform-migrations.js";
 import { builtInThemes } from "./themes.js";
 
 const filename = resolve(process.env.CMS_DATABASE || "data/cms.sqlite");
@@ -46,6 +49,10 @@ CREATE TABLE inquiries (id TEXT PRIMARY KEY, theme_id TEXT NOT NULL, kind TEXT N
       {
         id: "cms-005-teraform-coverage-image",
         sql: teraformCoverageImageMigration,
+      },
+      {
+        id: "cms-006-teraform-feedback-label",
+        sql: teraformFeedbackIconMigration,
       },
     ],
   });

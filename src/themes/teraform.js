@@ -378,7 +378,7 @@ const sections = [
         url: "#contact",
       },
     ],
-    template: `<section class="fx-section" id="reviews">${intro}<div class="fx-reviews">{{#each items}}<article class="fx-card"><p class="fx-eyebrow">${icon("spark")} {{rating}}</p><blockquote>{{quote}}</blockquote><div class="fx-review-person">{{#if image}}<img src="{{image}}" alt="{{alt}}">{{else}}${icon("person")}{{/if}}<div><strong>{{name}}</strong><p>{{role}}</p></div><a href="{{url}}" aria-label="Client profile">${arrow}</a></div></article>{{/each}}</div></section>`,
+    template: `<section class="fx-section" id="reviews">${intro}<div class="fx-reviews">{{#each items}}<article class="fx-card"><p class="fx-eyebrow">{{rating}}</p><blockquote>{{quote}}</blockquote><div class="fx-review-person">{{#if image}}<img src="{{image}}" alt="{{alt}}">{{else}}${icon("person")}{{/if}}<div><strong>{{name}}</strong><p>{{role}}</p></div><a href="{{url}}" aria-label="Client profile">${arrow}</a></div></article>{{/each}}</div></section>`,
   },
   {
     id: "stats",
