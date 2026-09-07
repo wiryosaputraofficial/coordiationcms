@@ -24,11 +24,17 @@ export function recordPublicView(request, now = new Date()) {
   if (!shouldCountView(request)) return;
   const db = services().db,
     day = now.toISOString().slice(0, 10);
-  // Store daily path totals only: no IPs, cookies, visitor IDs, queries or referrers.
+  // Store aggregate daily paths and site-wide hourly totals only: no IPs, cookies, visitor IDs, queries or referrers.
   db.transaction(() => {
     db.prepare("DELETE FROM page_views WHERE day < ?").run(
       new Date(now.getTime() - 89 * DAY).toISOString().slice(0, 10),
     );
+    db.prepare("DELETE FROM page_view_hours WHERE day < ?").run(
+      new Date(now.getTime() - 89 * DAY).toISOString().slice(0, 10),
+    );
+    db.prepare(
+      "INSERT INTO page_view_hours(day,hour,views) VALUES(?,?,1) ON CONFLICT(day,hour) DO UPDATE SET views=views+1",
+    ).run(day, now.getUTCHours());
     db.prepare(
       "INSERT INTO page_views(day,path,views) VALUES(?,?,1) ON CONFLICT(day,path) DO UPDATE SET views=views+1",
     ).run(day, new URL(request.url).pathname);
@@ -38,6 +44,9 @@ export function getStatistics(days = 30, now = new Date()) {
   if (![7, 30, 90].includes(days)) fail(400, "Choose 7, 30, or 90 days.");
   const db = services().db;
   db.prepare("DELETE FROM page_views WHERE day < ?").run(
+    new Date(now.getTime() - 89 * DAY).toISOString().slice(0, 10),
+  );
+  db.prepare("DELETE FROM page_view_hours WHERE day < ?").run(
     new Date(now.getTime() - 89 * DAY).toISOString().slice(0, 10),
   );
   const end = now.toISOString().slice(0, 10),
@@ -82,7 +91,38 @@ export function getStatistics(days = 30, now = new Date()) {
         `SELECT count(*) AS n FROM ${table} WHERE substr(created_at,1,10) BETWEEN ? AND ? ${extra}`,
       )
       .get(start, end).n;
+  const hourly = Array.from({ length: 24 }, (_, hour) => ({ hour, views: 0 }));
+  for (const row of db
+    .prepare(
+      "SELECT hour,sum(views) AS views FROM page_view_hours WHERE day BETWEEN ? AND ? GROUP BY hour",
+    )
+    .all(start, end))
+    hourly[row.hour].views = row.views;
+  const topPages = db
+    .prepare(
+      "SELECT path,sum(views) AS views FROM page_views WHERE day BETWEEN ? AND ? GROUP BY path ORDER BY views DESC,path LIMIT 10",
+    )
+    .all(start, end);
+  const heatmapDaily = db
+    .prepare(
+      `SELECT v.day,v.path,v.views FROM page_views v JOIN (
+    SELECT path FROM page_views WHERE day BETWEEN ? AND ? GROUP BY path ORDER BY sum(views) DESC,path LIMIT 10
+  ) top ON top.path=v.path WHERE v.day BETWEEN ? AND ? ORDER BY v.day,v.path`,
+    )
+    .all(start, end, start, end);
   return {
+    hourly,
+    hourlyStartedAt: JSON.parse(
+      db
+        .prepare(
+          "SELECT value FROM settings WHERE key='hourlyStatisticsStartedAt'",
+        )
+        .get().value,
+    ),
+    pageHeatmap: {
+      pages: topPages.map((row) => row.path),
+      daily: heatmapDaily,
+    },
     days,
     start,
     end,
@@ -102,10 +142,6 @@ export function getStatistics(days = 30, now = new Date()) {
       inquiries: count("inquiries"),
       publishedInPeriod: daily.reduce((n, row) => n + row.posts + row.pages, 0),
     },
-    topPages: db
-      .prepare(
-        "SELECT path,sum(views) AS views FROM page_views WHERE day BETWEEN ? AND ? GROUP BY path ORDER BY views DESC,path LIMIT 10",
-      )
-      .all(start, end),
+    topPages,
   };
 }

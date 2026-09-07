@@ -66,6 +66,11 @@ CREATE TABLE ai_config (id INTEGER PRIMARY KEY CHECK(id=1), base_url TEXT NOT NU
         sql: `CREATE TABLE page_views (day TEXT NOT NULL, path TEXT NOT NULL, views INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day,path)) STRICT;
 INSERT OR IGNORE INTO settings(key,value) VALUES('statisticsStartedAt',json_quote(strftime('%Y-%m-%dT%H:%M:%fZ','now')));`,
       },
+      {
+        id: "cms-010-hourly-statistics",
+        sql: `CREATE TABLE page_view_hours (day TEXT NOT NULL, hour INTEGER NOT NULL CHECK(hour BETWEEN 0 AND 23), views INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day,hour)) STRICT;
+INSERT OR IGNORE INTO settings(key,value) VALUES('hourlyStatisticsStartedAt',json_quote(strftime('%Y-%m-%dT%H:%M:%fZ','now')));`,
+      },
     ],
   });
   const auth = createPasswordAuth({

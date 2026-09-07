@@ -1058,6 +1058,18 @@ test("statistics count public views while excluding previews, bots, searches and
   await fetch(base + path, { headers: { "sec-purpose": "prefetch" } });
   const after = await api("statistics?days=7");
   assert.equal(after.totals.views - before.totals.views, 2);
+  assert.equal(
+    after.hourly.reduce((sum, row) => sum + row.views, 0) -
+      before.hourly.reduce((sum, row) => sum + row.views, 0),
+    2,
+  );
+  assert.equal(after.hourly.length, 24);
+  assert.equal(
+    after.pageHeatmap.daily
+      .filter((row) => row.path === path)
+      .reduce((sum, row) => sum + row.views, 0),
+    2,
+  );
   assert.equal(after.topPages.find((page) => page.path === path).views, 2);
   assert.ok(after.topPages.every((page) => !page.path.includes("?")));
   assert.ok(after.totals.publishedInPeriod > 0);
@@ -1071,7 +1083,18 @@ test("statistics remove expired aggregates and zero-fill inactive days", async (
       "/expired",
       999,
     );
+    db.prepare(
+      "INSERT INTO page_view_hours(day,hour,views) VALUES('2000-01-01',12,999)",
+    ).run();
     const stats = await api("statistics?days=90");
+    assert.equal(
+      db
+        .prepare(
+          "SELECT count(*) AS n FROM page_view_hours WHERE day='2000-01-01'",
+        )
+        .get().n,
+      0,
+    );
     assert.ok(!stats.topPages.some((row) => row.path === "/expired"));
     assert.equal(
       db
@@ -1088,6 +1111,47 @@ test("statistics remove expired aggregates and zero-fill inactive days", async (
       ["day", "path", "views"],
     );
   } finally {
+    db.close();
+  }
+});
+test("heatmap ranks ten paths, matches daily totals, and hourly data respects the selected range", async () => {
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(join(directory, "test.sqlite"));
+  const today = new Date().toISOString().slice(0, 10);
+  const older = new Date(Date.now() - 8 * 86400000).toISOString().slice(0, 10);
+  const paths = Array.from({ length: 11 }, (_, i) => `/heatmap-fixture-${i}`);
+  try {
+    for (const [i, path] of paths.entries())
+      db.prepare("INSERT INTO page_views(day,path,views) VALUES(?,?,?)").run(
+        today,
+        path,
+        10000 + i,
+      );
+    db.prepare("INSERT INTO page_view_hours(day,hour,views) VALUES(?,?,?)").run(
+      older,
+      23,
+      91,
+    );
+    const week = await api("statistics?days=7"),
+      month = await api("statistics?days=30");
+    assert.equal(week.pageHeatmap.pages.length, 10);
+    assert.equal(week.pageHeatmap.pages[0], paths[10]);
+    assert.ok(!week.pageHeatmap.pages.includes(paths[0]));
+    for (const page of week.topPages)
+      assert.equal(
+        week.pageHeatmap.daily
+          .filter((row) => row.path === page.path)
+          .reduce((n, row) => n + row.views, 0),
+        page.views,
+      );
+    assert.equal(month.hourly[23].views - week.hourly[23].views, 91);
+    assert.ok(!Number.isNaN(Date.parse(week.hourlyStartedAt)));
+  } finally {
+    for (const path of paths)
+      db.prepare("DELETE FROM page_views WHERE path=?").run(path);
+    db.prepare("DELETE FROM page_view_hours WHERE day=? AND hour=23").run(
+      older,
+    );
     db.close();
   }
 });
