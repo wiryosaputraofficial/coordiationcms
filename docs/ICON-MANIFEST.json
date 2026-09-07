@@ -203,6 +203,11 @@
       "key": "statistics",
       "name": "chart-2",
       "asset": "/icons/solar-linear/chart-2.svg"
+    },
+    {
+      "key": "refresh",
+      "name": "restart",
+      "asset": "/icons/solar-linear/restart.svg"
     }
   ]
 }

@@ -2,6 +2,7 @@
 const names = new Set([
   "dashboard",
   "statistics",
+  "refresh",
   "posts",
   "pages",
   "media",

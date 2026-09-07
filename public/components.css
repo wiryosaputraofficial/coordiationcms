@@ -135,6 +135,10 @@
   mask-image: url("/icons/solar-linear/chart-2.svg");
 }
 
+.co-icon-refresh {
+  mask-image: url("/icons/solar-linear/restart.svg");
+}
+
 /* Shared Coordiation components; theme colors remain configurable. */
 :root {
   --pc-border: color-mix(in srgb, var(--theme-fg) 16%, transparent);

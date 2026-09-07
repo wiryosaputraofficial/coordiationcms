@@ -3512,16 +3512,34 @@ th:last-child:not(:first-child) {
   align-items: flex-end;
   gap: 12px;
 }
-.statistics-controls label {
+.statistics-controls .ui-field {
+  min-width: 180px;
+}
+.statistics-controls > .button {
+  flex-shrink: 0;
+}
+.ui-native-select {
+  position: relative;
+  min-width: 0;
+}
+.ui-native-select select {
+  appearance: none;
   margin: 0;
-  display: grid;
-  gap: 6px;
-  font-size: 12px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+.ui-native-select > .icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
   color: var(--muted);
 }
-.statistics-controls select {
-  margin: 0;
-  min-width: 154px;
+.ui-native-select:has(select:disabled) > .icon {
+  opacity: 0.5;
 }
 .statistics-metrics {
   display: grid;
@@ -3622,5 +3640,12 @@ th:last-child:not(:first-child) {
 @media (max-width: 420px) {
   .statistics-metrics {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .statistics-controls .ui-field {
+    flex: 1;
+    min-width: 0;
   }
 }

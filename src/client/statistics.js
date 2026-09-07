@@ -1,4 +1,4 @@
-import { card } from "./ui.js";
+import { card, field, nativeSelect, outlineButton } from "./ui.js";
 import { icon } from "./icons.js";
 import { mountCoordiationChart } from "./coordiation-chart.js";
 const esc = (v) =>
@@ -24,7 +24,15 @@ export async function renderStatistics({ api, isCurrent }, days = 30) {
   if (!isCurrent()) return;
   disposeStatistics();
   document.querySelector("#workspace").innerHTML =
-    `<div class="page-heading"><div><h1>Statistics</h1><p>Understand your traffic and publishing activity.</p></div><div class="statistics-controls"><label for="statistics-period">Period<select id="statistics-period"><option value="7" ${days === 7 ? "selected" : ""}>Last 7 days</option><option value="30" ${days === 30 ? "selected" : ""}>Last 30 days</option><option value="90" ${days === 90 ? "selected" : ""}>Last 90 days</option></select></label><button class="button" id="statistics-refresh">Refresh</button></div></div><p class="field-hint">${esc(data.start)} – ${esc(data.end)} · UTC · Traffic recording started ${esc(data.startedAt.slice(0, 10))}</p><p id="statistics-status" class="field-hint" role="status"></p><div class="statistics-metrics">${[
+    `<div class="page-heading"><div><h1>Statistics</h1><p>Understand your traffic and publishing activity.</p></div><div class="statistics-controls">${field(
+      "statistics-period",
+      "Period",
+      nativeSelect(
+        "statistics-period",
+        [7, 30, 90].map((value) => ({ value, label: `Last ${value} days` })),
+        days,
+      ),
+    )}${outlineButton("statistics-refresh", "Refresh", "refresh")}</div></div><p class="field-hint">${esc(data.start)} – ${esc(data.end)} · UTC · Traffic recording started ${esc(data.startedAt.slice(0, 10))}</p><p id="statistics-status" class="field-hint" role="status"></p><div class="statistics-metrics">${[
       ["Page views", data.totals.views, "Within the selected period"],
       ["Published posts", data.totals.posts, "Current public posts"],
       ["Published pages", data.totals.pages, "Current public pages"],
@@ -105,7 +113,7 @@ export async function renderStatistics({ api, isCurrent }, days = 30) {
           "Unable to refresh statistics. Please try again.";
         select.disabled = false;
         button.disabled = false;
-        button.textContent = "Retry refresh";
+        button.querySelector("span:last-child").textContent = "Retry refresh";
       }
     }
   };
