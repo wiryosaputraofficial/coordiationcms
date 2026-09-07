@@ -1,3 +1,4 @@
+import { renderStatistics, disposeStatistics } from "./statistics.js";
 import { renderAISettings, openWritingAssistant } from "./ai.js";
 import { renderHomepageEditor } from "./homepage.js";
 import { card, field, switchField } from "./ui.js";
@@ -152,6 +153,7 @@ function nav() {
       "WORKSPACE",
       [
         ["dashboard", "Dashboard"],
+        ["statistics", "Statistics"],
         ["posts", "Posts"],
         ["pages", "Pages"],
         ["media", "Media"],
@@ -181,6 +183,7 @@ function nav() {
       const filtered = items.filter(
         ([id]) =>
           id === "dashboard" ||
+          (id === "statistics" && isAdmin()) ||
           (id === "posts" && isWriter()) ||
           (id === "pages" && isEditor()) ||
           (id === "media" && canUpload()) ||
@@ -1158,6 +1161,7 @@ function renderProfile() {
 }
 async function route() {
   const version = ++routeVersion;
+  disposeStatistics();
   clearTimeout(autosaveTimer);
   editor = null;
   dirty = false;
@@ -1178,6 +1182,7 @@ async function route() {
   $("#breadcrumb").textContent =
     {
       dashboard: "Dashboard",
+      statistics: "Statistics",
       posts: "Posts",
       pages: "Pages",
       media: "Media",
@@ -1211,11 +1216,18 @@ async function route() {
         "homepage",
         "inquiries",
         "ai-settings",
+        "statistics",
       ].includes(name) &&
       !isAdmin()
     )
       throw new Error("This page is only available to administrators.");
     switch (name) {
+      case "statistics":
+        await renderStatistics({
+          api,
+          isCurrent: () => version === routeVersion,
+        });
+        break;
       case "ai-settings":
         await renderAISettings({ api, toast });
         break;

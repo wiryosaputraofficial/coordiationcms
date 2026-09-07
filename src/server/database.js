@@ -61,6 +61,11 @@ CREATE TABLE inquiries (id TEXT PRIMARY KEY, theme_id TEXT NOT NULL, kind TEXT N
         sql: `ALTER TABLE posts ADD COLUMN seo TEXT NOT NULL DEFAULT '{}';
 CREATE TABLE ai_config (id INTEGER PRIMARY KEY CHECK(id=1), base_url TEXT NOT NULL, model TEXT NOT NULL, encrypted_key TEXT NOT NULL) STRICT;`,
       },
+      {
+        id: "cms-009-statistics",
+        sql: `CREATE TABLE page_views (day TEXT NOT NULL, path TEXT NOT NULL, views INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day,path)) STRICT;
+INSERT OR IGNORE INTO settings(key,value) VALUES('statisticsStartedAt',json_quote(strftime('%Y-%m-%dT%H:%M:%fZ','now')));`,
+      },
     ],
   });
   const auth = createPasswordAuth({

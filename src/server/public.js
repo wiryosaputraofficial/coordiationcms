@@ -1,3 +1,4 @@
+import { recordPublicView } from "./statistics.js";
 import { llmsGET } from "./discovery.js";
 import { seoHead, fallbackDescription } from "./seo.js";
 import { homepageSlots } from "./homepage-render.js";
@@ -104,6 +105,17 @@ export function loadPublic(request, { params, archive = false }) {
       site = settings(),
       user = currentUser(request),
       preview = url.searchParams.has("preview");
+    const respond = (body, status = 200) => {
+      const response = htmlResponse(body, status);
+      if (status === 200 && !user && !preview) {
+        try {
+          recordPublicView(request);
+        } catch {
+          console.error("Unable to record page view.");
+        }
+      }
+      return response;
+    };
     if (preview && !user) fail(401, "Sign in to view previews.");
     if (url.searchParams.get("theme")) {
       if (user?.role !== "administrator") fail(403, "Access denied.");
@@ -125,7 +137,7 @@ export function loadPublic(request, { params, archive = false }) {
       const { data } = getHomepage(theme),
         hero = data.sections.hero?.values || {},
         brand = data.sections.header?.values.brand || site.title;
-      return htmlResponse(
+      return respond(
         document(
           [hero.title, hero.highlight].filter(Boolean).join(" ") || brand,
           hero.description || site.tagline,
@@ -143,7 +155,7 @@ export function loadPublic(request, { params, archive = false }) {
         ? db.prepare("SELECT * FROM posts WHERE id=?").get(site.homepage)
         : null;
     if (params?.slug && !row)
-      return htmlResponse(
+      return respond(
         document(
           "Not found",
           "Page not found.",
@@ -158,7 +170,7 @@ export function loadPublic(request, { params, archive = false }) {
       const isPublic =
         post.status === "published" && post.visibility === "public";
       if (!isPublic && (!preview || !user || !canEdit(user, post)))
-        return htmlResponse(
+        return respond(
           document(
             "Not found",
             "",
@@ -177,7 +189,7 @@ export function loadPublic(request, { params, archive = false }) {
         post.comments_open && !site.hideComments
           ? `<section class="comments"><h2>Conversation (${comments.length})</h2>${comments.map((c) => `<article class="comment"><header class="comment-person"><span class="comment-avatar" aria-hidden="true">${escape(c.name.trim().slice(0, 1).toUpperCase())}</span><div><strong>${escape(c.name)}</strong><time datetime="${escape(c.created_at)}">${escape(new Date(c.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }))}</time></div></header><p class="comment-text">${escape(c.body)}</p></article>`).join("")}${url.searchParams.has("comment") ? '<p class="notice">Thank you. Your comment is awaiting moderation.</p>' : ""}${site.allowComments && isPublic && !preview ? `<section class="comment-form"><h3 class="comment-heading">${icon("comments")} Leave a comment</h3><p>Join the conversation. Your email stays private, and comments are reviewed before publication.</p><form method="post" action="/api/comments"><input type="hidden" name="postId" value="${post.id}"><div class="comment-fields"><label><span class="comment-label">${icon("person")} Name</span><input autocomplete="name" name="name" required maxlength="100"></label><label><span class="comment-label">${icon("email")} Email (not published)</span><input autocomplete="email" name="email" type="email" required maxlength="254"></label></div><label><span class="comment-label">${icon("edit")} Comment</span><textarea name="body" required maxlength="4000"></textarea></label><button type="submit">${icon("arrow")} Submit comment</button></form></section>` : ""}</section>`
           : "";
-      return htmlResponse(
+      return respond(
         document(
           post.title,
           fallbackDescription(post),
@@ -242,7 +254,7 @@ export function loadPublic(request, { params, archive = false }) {
       }
       return (archive ? "/blog?" : "/?") + s;
     };
-    return htmlResponse(
+    return respond(
       document(
         query
           ? `Search: ${query}`

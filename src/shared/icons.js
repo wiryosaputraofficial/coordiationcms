@@ -1,6 +1,7 @@
 // Coordiation registry · Solar Linear · 480 Design · CC BY 4.0.
 const names = new Set([
   "dashboard",
+  "statistics",
   "posts",
   "pages",
   "media",

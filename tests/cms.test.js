@@ -1008,6 +1008,89 @@ test("AI setup is private, does not expose keys and requires a connection", asyn
   });
   assert.equal(cleared.configured, false);
 });
+test("statistics restrict access and validate the UTC reporting period", async () => {
+  assert.equal(
+    (await req("/api/cms/statistics", "GET", undefined, "")).status,
+    401,
+  );
+  assert.equal(
+    (await req("/api/cms/statistics", "GET", undefined, authorCookie)).status,
+    403,
+  );
+  assert.equal((await req("/api/cms/statistics?days=365")).status, 400);
+  for (const days of [7, 30, 90]) {
+    const data = await api(`statistics?days=${days}`);
+    assert.equal(data.daily.length, days);
+    assert.equal(data.timezone, "UTC");
+    assert.equal(data.daily[0].day, data.start);
+    assert.equal(data.daily.at(-1).day, data.end);
+    assert.equal(
+      Date.parse(data.end) - Date.parse(data.start),
+      (days - 1) * 86400000,
+    );
+    assert.equal(
+      data.totals.views,
+      data.daily.reduce((sum, row) => sum + row.views, 0),
+    );
+    assert.ok(
+      data.daily.every((row) =>
+        [row.views, row.posts, row.pages].every(Number.isInteger),
+      ),
+    );
+  }
+});
+test("statistics count public views while excluding previews, bots, searches and signed-in readers", async () => {
+  const article = await api("posts", "POST", {
+    title: "Statistics coverage",
+    status: "published",
+    visibility: "public",
+  });
+  const path = "/" + article.slug;
+  const before = await api("statistics?days=7");
+  assert.equal((await req(path, "GET", undefined, "")).status, 200);
+  assert.equal((await req(path, "GET", undefined, "")).status, 200);
+  assert.equal((await req(path)).status, 200);
+  assert.equal((await req(path + "?preview=1")).status, 200);
+  await req(path + "?q=private-search", "GET", undefined, "");
+  await req("/statistics-missing-page", "GET", undefined, "");
+  await req(path, "HEAD", undefined, "");
+  await fetch(base + path, { headers: { "user-agent": "Googlebot" } });
+  await fetch(base + path, { headers: { "sec-purpose": "prefetch" } });
+  const after = await api("statistics?days=7");
+  assert.equal(after.totals.views - before.totals.views, 2);
+  assert.equal(after.topPages.find((page) => page.path === path).views, 2);
+  assert.ok(after.topPages.every((page) => !page.path.includes("?")));
+  assert.ok(after.totals.publishedInPeriod > 0);
+});
+test("statistics remove expired aggregates and zero-fill inactive days", async () => {
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(join(directory, "test.sqlite"));
+  try {
+    db.prepare("INSERT INTO page_views(day,path,views) VALUES(?,?,?)").run(
+      "2000-01-01",
+      "/expired",
+      999,
+    );
+    const stats = await api("statistics?days=90");
+    assert.ok(!stats.topPages.some((row) => row.path === "/expired"));
+    assert.equal(
+      db
+        .prepare("SELECT count(*) AS n FROM page_views WHERE day='2000-01-01'")
+        .get().n,
+      0,
+    );
+    assert.equal(stats.daily[0].views, 0);
+    assert.deepEqual(
+      db
+        .prepare("PRAGMA table_info(page_views)")
+        .all()
+        .map((col) => col.name),
+      ["day", "path", "views"],
+    );
+  } finally {
+    db.close();
+  }
+});
 test("password change verifies current password and revokes sessions", async () => {
   const r = await req(
     "/api/cms/password",

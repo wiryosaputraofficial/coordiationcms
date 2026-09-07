@@ -1,3 +1,4 @@
+import { getStatistics } from "./statistics.js";
 import { aiSettings, saveAISettings, generateWriting } from "./ai.js";
 import { getHomepage, saveHomepage, portableTheme } from "./homepage-store.js";
 import { randomUUID } from "node:crypto";
@@ -50,6 +51,12 @@ export function GET(request, { params }) {
       url = new URL(request.url),
       resource = params.resource;
     publishDue();
+    if (resource === "statistics") {
+      requireUser(request, admin);
+      return json(getStatistics(Number(url.searchParams.get("days") || 30)), {
+        headers: { "Cache-Control": "private, no-store", Vary: "Cookie" },
+      });
+    }
     if (resource === "dashboard") {
       const own = !editors.includes(u.role),
         args = own ? [u.id] : [],

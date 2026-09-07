@@ -129,3 +129,7 @@
 .co-icon-search {
   mask-image: url(/icons/solar-linear/magnifier.svg);
 }
+
+.co-icon-statistics {
+  mask-image: url("/icons/solar-linear/chart-2.svg");
+}

@@ -198,6 +198,11 @@
       "key": "search",
       "name": "magnifier",
       "asset": "/icons/solar-linear/magnifier.svg"
+    },
+    {
+      "key": "statistics",
+      "name": "chart-2",
+      "asset": "/icons/solar-linear/chart-2.svg"
     }
   ]
 }

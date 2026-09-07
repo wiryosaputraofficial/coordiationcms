@@ -6,3 +6,5 @@ data/
 .env.*
 !.env.example
 coverage/
+
+/src/client/generated/
