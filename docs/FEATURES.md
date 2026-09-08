@@ -1,6 +1,6 @@
 # Feature scope
 
-The target is a WordPress-style publishing workflow with a native Coordiation theme ecosystem. Version 0.1 is not a complete reimplementation of WordPress.
+The target is a WordPress-style publishing workflow with a native Coordiation theme ecosystem. Version 0.2 is not a complete reimplementation of WordPress.
 
 | Area         | Implemented                                                                                                                  | Remaining differences                                                                                                           |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |

@@ -49,8 +49,15 @@ Data lives in `data/cms.sqlite`. Override the location with `CMS_DATABASE`. `.en
 - Two built-in extensions: reading time and table of contents.
 - Server-rendered pages, SEO controls and meter, social metadata, article JSON-LD, RSS, sitemap, and an optional AI-readable content index.
 - OpenAI writing assistance with private connection settings and review before applying. See [SEO and AI](docs/SEO-AND-AI.md).
+- Administrator Statistics with daily page views, publishing charts, content status, top pages, peak hours (WIB/UTC), and a page heatmap. Includes 7/30/90-day filters and accessible data tables.
 - Native JSON content import/export and a bounded WordPress WXR content importer.
 - Docker/Traefik deployment, health checks, database backup and isolated restore commands.
+
+## New in 0.2.0
+
+Statistics now uses Coordiation Interactive Charts with daily traffic, peak hours and page heatmaps. It stores aggregate counts only, excludes signed-in visits and common bots, and removes records outside the rolling 90-day window on the next view or statistics request. Hourly history begins when the hourly migration is installed; existing daily data is preserved. See [release notes](CHANGELOG.md) and [statistics scope](docs/FEATURES.md#statistics).
+
+An initialized site contains its own copy of the source. Running the initializer again or installing a newer npm package does not upgrade that site. Back up first and review the source-update steps in [Deployment](docs/DEPLOYMENT.md#updates).
 
 ## Theme authoring
 
@@ -75,7 +82,7 @@ Tests launch an isolated compiled server on port 3319 and create disposable SQLi
 
 See [Deployment](docs/DEPLOYMENT.md), [Security](docs/SECURITY.md), and [Feature scope](docs/FEATURES.md).
 
-This is a working **0.1 release foundation**, not complete WordPress feature parity or a production certification. Coordiation Fullstack itself is an alpha. The feature matrix explicitly identifies capabilities that are not implemented; do not advertise full WordPress compatibility.
+This is a working **0.2 early release**, not complete WordPress feature parity or a production certification. Coordiation Fullstack itself is an alpha. The feature matrix explicitly identifies capabilities that are not implemented; do not advertise full WordPress compatibility.
 
 Official references: [Coordiation Fullstack installation](https://coordiation.com/docs/installation/using-fullstack), [WordPress core features](https://wordpress.org/about/features/). Font licensing is retained in `public/fonts/OFL.txt`; package dependencies retain their own licenses. The manifest's theme license field should reflect the distribution terms chosen by the theme author.
 

@@ -55,6 +55,7 @@ try {
       ".env.example",
       ".dockerignore",
       "README.md",
+      "CHANGELOG.md",
     ];
     for (const name of files)
       cpSync(join(root, name), join(destination, name), {
@@ -84,7 +85,7 @@ try {
           .toLowerCase()
           .replace(/[^a-z0-9-]/g, "-")
           .replace(/^-+/, "") || "my-cms",
-      version: "0.1.0",
+      version: pkg.version,
       private: true,
       type: "module",
       engines: pkg.engines,

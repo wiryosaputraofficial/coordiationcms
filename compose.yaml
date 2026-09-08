@@ -4,7 +4,7 @@ services:
       context: .
       args:
         CMS_ORIGIN: https://app.coordiation.com
-    image: coordiation-cms:0.1.0
+    image: coordiation-cms:0.2.0
     container_name: coordiation-cms
     restart: unless-stopped
     init: true

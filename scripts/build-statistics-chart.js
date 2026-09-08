@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 const build = await rolldown({
   input: fileURLToPath(new URL("./statistics-chart-entry.js", import.meta.url)),
   platform: "browser",
-  define: { "process.env.NODE_ENV": JSON.stringify("production") },
+  transform: {
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+  },
 });
 try {
   await build.write({
