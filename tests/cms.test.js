@@ -1155,6 +1155,184 @@ test("heatmap ranks ten paths, matches daily totals, and hourly data respects th
     db.close();
   }
 });
+test("code editor validates transient documents without publishing them", async () => {
+  const body = {
+    layout: "canvas",
+    blocks: [
+      {
+        type: "section",
+        styles: {
+          desktop: { layout: "flex", paddingTop: 32 },
+          mobile: { padding: 16 },
+        },
+        children: [
+          { type: "html", content: "<p>Safe</p><script>alert(1)</script>" },
+        ],
+      },
+    ],
+  };
+  const checked = await api("builder-document", "POST", body);
+  assert.equal(checked.layout, "canvas");
+  assert.match(checked.html, /pb-desktop-paddingTop-32/);
+  assert.doesNotMatch(checked.html, /<script/);
+  assert.equal(
+    (await req("/api/cms/builder-document", "POST", body, subscriberCookie))
+      .status,
+    403,
+  );
+  assert.equal(
+    (await req("/api/cms/builder-document", "POST", body, "")).status,
+    401,
+  );
+  assert.equal(
+    (
+      await req("/api/cms/builder-document", "POST", {
+        ...body,
+        blocks: [{ type: "section", styles: { desktop: { layout: "fixed" } } }],
+      })
+    ).status,
+    400,
+  );
+});
+test("builder layouts persist, autosave and revisions preserve nested blocks", async () => {
+  const blocks = [
+    {
+      type: "section",
+      styles: { desktop: { columns: 2, padding: 32 }, mobile: { columns: 1 } },
+      children: [
+        { type: "heading", level: 1, content: "Builder page" },
+        {
+          type: "paragraph",
+          content: "Nested content for search and readers.",
+        },
+      ],
+    },
+  ];
+  const page = await api("posts", "POST", {
+    type: "page",
+    title: "Builder page",
+    slug: "builder-page",
+    blocks,
+    layout: "canvas",
+    status: "published",
+    comments_open: false,
+  });
+  assert.equal(page.layout, "canvas");
+  assert.equal(page.blocks[0].children[0].level, 1);
+  const html = await (await req("/builder-page", "GET", undefined, "")).text();
+  assert.match(html, /pb-canvas-page/);
+  assert.match(html, /pb-mobile-columns-1/);
+  assert.match(html, /<h1 id="section-1">Builder page/);
+  assert.doesNotMatch(html, /class="fx-article-header"/);
+  assert.equal(
+    (await req("/api/cms/posts", "POST", { ...page, layout: "unsafe" })).status,
+    400,
+  );
+  await api("autosave", "POST", {
+    ...page,
+    blocks: [...page.blocks, { type: "paragraph", content: "Autosaved" }],
+  });
+  const read = await api("posts?id=" + page.id);
+  assert.equal(JSON.parse(read.autosave.snapshot).layout, "canvas");
+  assert.equal(JSON.parse(read.autosave.snapshot).blocks[0].children.length, 2);
+  const changed = await api("posts", "POST", {
+    ...page,
+    layout: "wide",
+    blocks: [{ type: "paragraph", content: "Changed" }],
+  });
+  const revision = (await api("posts?id=" + page.id)).revisions[0];
+  const restored = await api("restore", "POST", {
+    id: page.id,
+    version: changed.version,
+    revision: revision.id,
+  });
+  assert.equal(restored.layout, "canvas");
+  assert.deepEqual(restored.blocks, page.blocks);
+});
+test("template library validates input, enforces role ownership and detects stale writes", async () => {
+  assert.equal(
+    (await req("/api/cms/content-templates", "GET", undefined, "")).status,
+    401,
+  );
+  assert.equal(
+    (
+      await req(
+        "/api/cms/content-templates",
+        "GET",
+        undefined,
+        subscriberCookie,
+      )
+    ).status,
+    403,
+  );
+  const t = await api(
+    "content-templates",
+    "POST",
+    {
+      name: "Reusable section",
+      layout: "wide",
+      blocks: [
+        {
+          type: "section",
+          children: [{ type: "paragraph", content: "Original" }],
+        },
+      ],
+    },
+    authorCookie,
+  );
+  let row = (await api("content-templates")).find((r) => r.id === t.id);
+  assert.equal(row.version, 1);
+  assert.equal(
+    (
+      await req(
+        "/api/cms/content-templates",
+        "DELETE",
+        { id: t.id, version: 1 },
+        contributorCookie,
+      )
+    ).status,
+    403,
+  );
+  await api(
+    "content-templates",
+    "POST",
+    { ...row, name: "Updated" },
+    authorCookie,
+  );
+  assert.equal(
+    (await req("/api/cms/content-templates", "POST", row, authorCookie)).status,
+    409,
+  );
+  assert.equal(
+    (
+      await req("/api/cms/content-templates", "POST", {
+        name: "Bad",
+        blocks: [
+          { type: "section", styles: { desktop: { padding: "999px" } } },
+        ],
+      })
+    ).status,
+    400,
+  );
+  row = (await api("content-templates")).find((r) => r.id === t.id);
+  const p = await api(
+    "posts",
+    "POST",
+    { title: "Template copy", blocks: row.blocks, status: "draft" },
+    authorCookie,
+  );
+  await api(
+    "content-templates",
+    "DELETE",
+    { id: t.id, version: row.version },
+    authorCookie,
+  );
+  assert.equal(
+    (await api("posts?id=" + p.id, "GET", undefined, authorCookie)).post
+      .blocks[0].children[0].content,
+    "Original",
+  );
+});
 test("password change verifies current password and revokes sessions", async () => {
   const r = await req(
     "/api/cms/password",

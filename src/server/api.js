@@ -1,3 +1,9 @@
+import {
+  listTemplates,
+  saveTemplate,
+  deleteTemplate,
+  validateLayout,
+} from "./builder.js";
 import { getStatistics } from "./statistics.js";
 import { aiSettings, saveAISettings, generateWriting } from "./ai.js";
 import { getHomepage, saveHomepage, portableTheme } from "./homepage-store.js";
@@ -24,7 +30,7 @@ import {
   safeUrl,
   canEdit,
 } from "./security.js";
-import { savePost, validateBlocks } from "./content.js";
+import { savePost, validateBlocks, renderBlocks } from "./content.js";
 import { packTheme, unpackTheme, cleanHTML, validTheme } from "./themes.js";
 
 import { passwordHash } from "./password.js";
@@ -51,6 +57,12 @@ export function GET(request, { params }) {
       url = new URL(request.url),
       resource = params.resource;
     publishDue();
+    if (resource === "content-templates") {
+      requireUser(request, writers);
+      return json(listTemplates(), {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+    }
     if (resource === "statistics") {
       requireUser(request, admin);
       return json(getStatistics(Number(url.searchParams.get("days") || 30)), {
@@ -320,6 +332,22 @@ export function POST(request, { params }) {
       return json({ ok: true, id: t.id });
     }
     const b = await body(request);
+    if (resource === "builder-document") {
+      requireUser(request, writers);
+      const blocks = validateBlocks(b.blocks);
+      return json(
+        {
+          blocks,
+          layout: validateLayout(b.layout),
+          html: renderBlocks(blocks),
+        },
+        { headers: { "Cache-Control": "private, no-store" } },
+      );
+    }
+    if (resource === "content-templates") {
+      requireUser(request, writers);
+      return json(saveTemplate(b, u));
+    }
     if (resource === "ai-settings") {
       requireUser(request, admin);
       return json(saveAISettings(b));
@@ -357,7 +385,8 @@ export function POST(request, { params }) {
     if (resource === "autosave") {
       requireUser(request, writers);
       getPost(b.id, u);
-      validateBlocks(b.blocks || []);
+      b.blocks = validateBlocks(b.blocks || []);
+      b.layout = validateLayout(b.layout);
       if (JSON.stringify(b).length > 300000) fail(400, "Content is too large.");
       db.prepare(
         "INSERT INTO autosaves VALUES (?,?,?,?) ON CONFLICT(post_id,author_id) DO UPDATE SET snapshot=excluded.snapshot,updated_at=excluded.updated_at",
@@ -692,6 +721,10 @@ export function DELETE(request, { params }) {
       { db } = services(),
       b = await body(request),
       r = params.resource;
+    if (r === "content-templates") {
+      requireUser(request, writers);
+      return json(deleteTemplate(b, u));
+    }
     if (r === "posts") {
       requireUser(request, writers);
       const p = getPost(b.id, u);

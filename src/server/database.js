@@ -67,6 +67,11 @@ CREATE TABLE ai_config (id INTEGER PRIMARY KEY CHECK(id=1), base_url TEXT NOT NU
 INSERT OR IGNORE INTO settings(key,value) VALUES('statisticsStartedAt',json_quote(strftime('%Y-%m-%dT%H:%M:%fZ','now')));`,
       },
       {
+        id: "cms-011-page-builder",
+        sql: `ALTER TABLE posts ADD COLUMN layout TEXT NOT NULL DEFAULT 'theme';
+CREATE TABLE content_templates (id TEXT PRIMARY KEY, name TEXT NOT NULL, layout TEXT NOT NULL, blocks TEXT NOT NULL, author_id TEXT NOT NULL REFERENCES profiles(id), version INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL) STRICT;`,
+      },
+      {
         id: "cms-010-hourly-statistics",
         sql: `CREATE TABLE page_view_hours (day TEXT NOT NULL, hour INTEGER NOT NULL CHECK(hour BETWEEN 0 AND 23), views INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day,hour)) STRICT;
 INSERT OR IGNORE INTO settings(key,value) VALUES('hourlyStatisticsStartedAt',json_quote(strftime('%Y-%m-%dT%H:%M:%fZ','now')));`,

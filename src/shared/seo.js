@@ -1,3 +1,4 @@
+import { flattenBlocks } from "./builder.js";
 /** Editorial checks, not a prediction of search-engine rankings. */
 export function analyzeSEO(post, siteTitle = "") {
   const title = (post.seo?.title || post.title || "").trim();
@@ -8,7 +9,7 @@ export function analyzeSEO(post, siteTitle = "") {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/^-+|-+$/g, "");
-  const blocks = post.blocks || [];
+  const blocks = flattenBlocks(post.blocks || []);
   const text = blocks
     .filter((b) => !["code", "image", "divider"].includes(b.type))
     .map((b) =>

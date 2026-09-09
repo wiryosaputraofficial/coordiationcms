@@ -1,3 +1,5 @@
+import { styleOptions, devices, renderBuilder } from "../shared/builder.js";
+import { validateLayout } from "./builder.js";
 import { randomUUID } from "node:crypto";
 import { services, publicPost } from "./database.js";
 import { text, slug, safeUrl, fail, canEdit, editors } from "./security.js";
@@ -14,33 +16,74 @@ export const escape = (value) =>
 export function validateBlocks(blocks) {
   if (!Array.isArray(blocks) || blocks.length > 200)
     fail(400, "Up to 200 blocks are allowed.");
-  return blocks.map((b) => {
-    if (
-      !b ||
-      ![
-        "paragraph",
-        "heading",
-        "image",
-        "quote",
-        "list",
-        "code",
-        "divider",
-        "button",
-        "html",
-      ].includes(b.type)
-    )
-      fail(400, "Unsupported block type.");
-    const v = {
-      type: b.type,
-      content: text(b.content || "", 20000),
-      url: safeUrl(b.url || ""),
-      alt: text(b.alt || "", 500),
-      caption: text(b.caption || "", 1000),
-      level: b.level === 3 ? 3 : 2,
-    };
-    if (v.type === "html") v.content = cleanHTML(v.content);
-    return v;
-  });
+  let count = 0;
+  function walk(list, depth = 0) {
+    if (!Array.isArray(list) || depth > 5)
+      fail(400, "Sections support up to five nesting levels.");
+    return list.map((b) => {
+      if (++count > 200)
+        fail(400, "Up to 200 blocks are allowed, including nested blocks.");
+      if (
+        !b ||
+        ![
+          "section",
+          "spacer",
+          "paragraph",
+          "heading",
+          "image",
+          "quote",
+          "list",
+          "code",
+          "divider",
+          "button",
+          "html",
+        ].includes(b.type)
+      )
+        fail(400, "Unsupported block type.");
+      const v = {
+        type: b.type,
+        content: text(b.content || "", 20000),
+        url: safeUrl(b.url || ""),
+        alt: text(b.alt || "", 500),
+        caption: text(b.caption || "", 1000),
+        level: [1, 2, 3, 4, 5, 6].includes(b.level) ? b.level : 2,
+      };
+      if (v.type === "html") v.content = cleanHTML(v.content);
+      if (b.type === "section") v.children = walk(b.children || [], depth + 1);
+      if (b.styles !== undefined) {
+        if (
+          !b.styles ||
+          typeof b.styles !== "object" ||
+          Array.isArray(b.styles)
+        )
+          fail(400, "Invalid block styles.");
+        v.styles = {};
+        for (const [device, styles] of Object.entries(b.styles)) {
+          if (
+            !devices.includes(device) ||
+            !styles ||
+            typeof styles !== "object" ||
+            Array.isArray(styles)
+          )
+            fail(400, "Invalid responsive styles.");
+          v.styles[device] = {};
+          for (const [key, value] of Object.entries(styles)) {
+            if (
+              !Object.hasOwn(styleOptions, key) ||
+              !styleOptions[key].includes(value)
+            )
+              fail(400, "Unsupported style value.");
+            v.styles[device][key] = value;
+          }
+        }
+      }
+      return v;
+    });
+  }
+  const validated = walk(blocks);
+  if (JSON.stringify(validated).length > 300000)
+    fail(400, "Content is too large.");
+  return validated;
 }
 export function validatePostSEO(value) {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -111,6 +154,7 @@ export function validatePost(b, user, old) {
     fail(400, "Media not found.");
   return {
     type,
+    layout: validateLayout(b.layout ?? old?.layout ?? "theme"),
     seo: validatePostSEO(b.seo ?? old?.seo ?? {}),
     title: text(b.title, 250, true),
     slug: slug(b.slug || b.title),
@@ -196,8 +240,9 @@ export function savePost(b, user, inTransaction = false) {
         now,
         now,
       );
-    db.prepare("UPDATE posts SET seo=? WHERE id=?").run(
+    db.prepare("UPDATE posts SET seo=?,layout=? WHERE id=?").run(
       JSON.stringify(p.seo),
+      p.layout,
       id,
     );
   };
@@ -206,45 +251,11 @@ export function savePost(b, user, inTransaction = false) {
   return publicPost(db.prepare("SELECT * FROM posts WHERE id=?").get(id));
 }
 export function renderBlocks(blocks, plugins = []) {
-  let heading = 0;
   const toc = [];
-  let html = blocks
-    .map((b) => {
-      const value = escape(b.content).replace(/\n/g, "<br>");
-      switch (b.type) {
-        case "heading": {
-          const id = `section-${++heading}`;
-          toc.push(`<li><a href="#${id}">${value}</a></li>`);
-          return `<h${b.level || 2} id="${id}">${value}</h${b.level || 2}>`;
-        }
-        case "paragraph":
-          return `<p>${value}</p>`;
-        case "quote":
-          return `<blockquote>${value}</blockquote>`;
-        case "list":
-          return `<ul>${b.content
-            .split("\n")
-            .filter(Boolean)
-            .map((x) => `<li>${escape(x)}</li>`)
-            .join("")}</ul>`;
-        case "code":
-          return `<pre><code>${escape(b.content)}</code></pre>`;
-        case "image":
-          return `<figure><img src="${escape(b.url)}" alt="${escape(b.alt)}" loading="lazy"><figcaption>${escape(b.caption)}</figcaption></figure>`;
-        case "button":
-          return `<p><a class="button" href="${escape(b.url)}">${value}</a></p>`;
-        case "divider":
-          return "<hr>";
-        case "html":
-          return cleanHTML(b.content);
-        default:
-          return "";
-      }
-    })
-    .join("");
+  let html = renderBuilder(blocks, { cleanHTML, toc });
   if (plugins.includes("table-of-contents") && toc.length)
     html =
       `<aside class="toc"><strong>In this article</strong><ol>${toc.join("")}</ol></aside>` +
       html;
-  return html;
+  return `<div class="pb-root"><div class="pb-content">${html}</div></div>`;
 }

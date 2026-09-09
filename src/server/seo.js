@@ -1,3 +1,4 @@
+import { flattenBlocks } from "../shared/builder.js";
 import { escape } from "./content.js";
 
 export const siteOrigin = () =>
@@ -5,7 +6,7 @@ export const siteOrigin = () =>
 export function fallbackDescription(post) {
   return (
     post.excerpt ||
-    (post.blocks || [])
+    flattenBlocks(post.blocks || [])
       .filter((b) => ["paragraph", "heading", "html"].includes(b.type))
       .map((b) => b.content || "")
       .join(" ")

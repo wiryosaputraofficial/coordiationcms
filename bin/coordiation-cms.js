@@ -68,6 +68,7 @@ try {
       "DEPLOYMENT.md",
       "DESIGN-SYSTEM.md",
       "FEATURES.md",
+      "PAGE-BUILDER.md",
       "SECURITY.md",
       "SEO-AND-AI.md",
       "THEMES.md",

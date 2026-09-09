@@ -72,7 +72,9 @@
     "LICENSE",
     "scripts/build-statistics-chart.js",
     "scripts/statistics-chart-entry.js",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "docs/PAGE-BUILDER.md",
+    "scripts/builder-styles.js"
   ],
   "publishConfig": {
     "access": "public",

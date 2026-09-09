@@ -1,3 +1,4 @@
+import { flattenBlocks } from "../shared/builder.js";
 import { recordPublicView } from "./statistics.js";
 import { llmsGET } from "./discovery.js";
 import { seoHead, fallbackDescription } from "./seo.js";
@@ -75,7 +76,7 @@ function viewPost(p, terms) {
       ? Math.max(
           1,
           Math.ceil(
-            p.blocks
+            flattenBlocks(p.blocks)
               .map((b) => b.content)
               .join(" ")
               .split(/\s+/).length / 200,
@@ -94,7 +95,7 @@ function document(
   seo = {},
 ) {
   const origin = process.env.CMS_ORIGIN || "http://127.0.0.1:3118";
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${seoHead({ title, description, path, site, preview, ...seo })}<link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css?v=seo-comments-3"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body${site.homepageMotion ? ` data-homepage-motion="true" data-animation="${escape(site.homepageMotion.animation)}" data-parallax="${escape(site.homepageMotion.parallax)}"` : ""}>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${seoHead({ title, description, path, site, preview, ...seo })}<link rel="stylesheet" href="/theme-style${preview ? "?preview=" + encodeURIComponent(site.activeTheme) : ""}"><link rel="stylesheet" href="/components.css?v=seo-comments-3"><link rel="stylesheet" href="/builder.css?v=1"><link rel="alternate" type="application/rss+xml" title="RSS" href="/feed"></head><body${site.homepageMotion ? ` data-homepage-motion="true" data-animation="${escape(site.homepageMotion.animation)}" data-parallax="${escape(site.homepageMotion.parallax)}"` : ""}>${preview ? '<div class="preview-banner">Preview · Your public site is unchanged. <a href="/admin#themes">Back to themes</a></div>' : ""}${body}</body></html>`;
 }
 export function loadPublic(request, { params, archive = false }) {
   if (params?.slug === "llms.txt") return llmsGET();
@@ -193,18 +194,22 @@ export function loadPublic(request, { params, archive = false }) {
         document(
           post.title,
           fallbackDescription(post),
-          renderTheme(theme.single, {
-            ...slots,
-            site,
-            menu: site.menu,
-            post: viewPost(post, terms),
-            content:
-              (theme.single.includes("{{post.author}}")
-                ? ""
-                : `<p class="article-byline">By ${escape(viewPost(post, terms).author)} · <time datetime="${escape(post.publish_at || post.created_at)}">${escape(viewPost(post, terms).date)}</time></p>`) +
-              renderBlocks(post.blocks, site.plugins),
-            comments: commentsHTML,
-          }),
+          post.layout === "canvas"
+            ? `<main class="pb-page pb-canvas-page" aria-label="${escape(post.title)}">${renderBlocks(post.blocks, site.plugins)}</main><div class="pb-page-comments">${commentsHTML}</div>`
+            : `<div class="pb-layout-${post.layout === "wide" ? "wide" : "theme"}">` +
+                renderTheme(theme.single, {
+                  ...slots,
+                  site,
+                  menu: site.menu,
+                  post: viewPost(post, terms),
+                  content:
+                    (theme.single.includes("{{post.author}}")
+                      ? ""
+                      : `<p class="article-byline">By ${escape(viewPost(post, terms).author)} · <time datetime="${escape(post.publish_at || post.created_at)}">${escape(viewPost(post, terms).date)}</time></p>`) +
+                    renderBlocks(post.blocks, site.plugins),
+                  comments: commentsHTML,
+                }) +
+                "</div>",
           url.pathname,
           preview || !isPublic,
           site,

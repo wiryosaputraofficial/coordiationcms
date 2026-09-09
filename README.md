@@ -89,3 +89,7 @@ Official references: [Coordiation Fullstack installation](https://coordiation.co
 ## License
 
 The CMS core is MIT licensed. Included fonts and icons retain their attribution and licenses in `public/fonts/OFL.txt` and `public/icons/ATTRIBUTION.txt`. Separately distributed premium themes may use their own license terms.
+
+## Native visual page builder (development)
+
+The source now includes a visual builder for Posts and Pages: docked Insert/Layers, canvas, Content/Style/Page panels, responsive styling, and reusable templates. This is newer than npm 0.2.0. See [Page Builder](docs/PAGE-BUILDER.md) for instructions and current limits.

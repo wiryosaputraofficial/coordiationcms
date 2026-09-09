@@ -1,3 +1,4 @@
+import { flattenBlocks } from "../shared/builder.js";
 import { card, field } from "./ui.js";
 import { icon } from "./icons.js";
 const esc = (v) =>
@@ -85,7 +86,7 @@ export async function openWritingAssistant({
       const result = await api("ai-write", "POST", {
         task,
         title: source.title,
-        source: (source.blocks || [])
+        source: flattenBlocks(source.blocks || [])
           .filter((b) => b.type !== "image")
           .map((b) => b.content || "")
           .join("\n\n")
@@ -139,7 +140,9 @@ export async function openWritingAssistant({
     }
     if (
       blocks.length +
-        (resultTask === "improve" ? 0 : readEditor()?.blocks.length || 0) >
+        (resultTask === "improve"
+          ? 0
+          : flattenBlocks(readEditor()?.blocks || []).length) >
       200
     ) {
       toast("This would exceed 200 blocks. Shorten the result.", true);

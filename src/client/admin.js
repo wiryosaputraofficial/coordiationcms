@@ -1,3 +1,4 @@
+import { createBuilder } from "./builder.js";
 import { renderStatistics, disposeStatistics } from "./statistics.js";
 import { renderAISettings, openWritingAssistant } from "./ai.js";
 import { renderHomepageEditor } from "./homepage.js";
@@ -51,6 +52,7 @@ let user,
   site,
   dashboard,
   editor = null,
+  builder = null,
   dirty = false,
   autosaveTimer,
   toastTimer,
@@ -323,17 +325,6 @@ async function renderPosts(type) {
     paint();
   });
 }
-const blockNames = {
-  paragraph: "Paragraph",
-  heading: "Heading",
-  image: "Image",
-  quote: "Quote",
-  list: "List",
-  code: "Code",
-  divider: "Divider",
-  button: "Button",
-  html: "Safe HTML",
-};
 function readEditor() {
   if (!editor) return null;
   const f = $("#post-form"),
@@ -359,14 +350,8 @@ function readEditor() {
   b.publish_at = f.elements.publish_at.value
     ? new Date(f.elements.publish_at.value).toISOString()
     : null;
-  b.blocks = $$(".editor-block").map((el) => ({
-    type: el.dataset.type,
-    content: $("[data-field=content]", el)?.value || "",
-    url: $("[data-field=url]", el)?.value || "",
-    alt: $("[data-field=alt]", el)?.value || "",
-    caption: $("[data-field=caption]", el)?.value || "",
-    level: Number($("[data-field=level]", el)?.value || 2),
-  }));
+  b.blocks = builder?.get() || editor.post.blocks;
+  b.layout = f.elements.layout.value;
   return b;
 }
 function updateSEO() {
@@ -376,43 +361,32 @@ function updateSEO() {
   const result = analyzeSEO(readEditor(), site.title);
   container.innerHTML = `<div class="seo-score-row"><strong>${result.score}<small>/100</small></strong><span>${result.label}</span></div><meter class="seo-meter" min="0" max="100" low="50" high="80" optimum="100" value="${result.score}" aria-label="SEO readiness">${result.score} out of 100</meter><p class="field-hint">Editorial guidance, not a ranking guarantee.</p><div class="seo-search-preview"><span class="eyebrow">Search preview</span><span class="seo-preview-url">/${esc(result.slug || "your-page")}</span><strong>${esc(result.title || "Your page title")}</strong><p>${esc(result.description || "Add an excerpt to describe this page in search results.")}</p></div><p class="field-hint">${result.indexable ? "Published and public: eligible for search indexing." : readEditor()?.seo?.noindex ? "Search indexing is disabled for this content." : "This content is not public yet. Search engines cannot index a draft or private preview."}</p><details class="seo-details" ${expanded ? "open" : ""}><summary>Review ${result.checks.filter((c) => !c.pass && c.applicable !== false).length} suggestions</summary><ul class="seo-checks">${result.checks.map((c) => `<li class="${c.applicable === false ? "seo-neutral" : c.pass ? "seo-pass" : "seo-improve"}"><strong>${icon(c.applicable === false ? "divider" : c.pass ? "check" : "spark")} ${esc(c.label)}</strong><p>${esc(c.detail)}</p></li>`).join("")}</ul></details>`;
 }
+function builderChanged() {
+  document
+    .querySelector("#post-form")
+    ?.dispatchEvent(new Event("input", { bubbles: true }));
+}
 function paintBlocks(blocks) {
-  $("#blocks").innerHTML = blocks
-    .map(
-      (b, i) =>
-        `<div class="editor-block" data-type="${b.type}"><div class="block-tools"><span class="block-type-label">${icon(b.type === "image" ? "media" : b.type)} ${blockNames[b.type]}</span><button type="button" class="icon-button" data-up="${i}" aria-label="Move block up" ${i === 0 ? "disabled" : ""}>${icon("up")}</button><button type="button" class="icon-button" data-down="${i}" aria-label="Move block down" ${i === blocks.length - 1 ? "disabled" : ""}>${icon("down")}</button><button type="button" class="icon-button" data-remove="${i}" aria-label="Remove block">${icon("close")}</button></div>${b.type === "divider" ? "<hr>" : b.type === "image" ? `<input data-field="url" placeholder="Image URL /media/… or HTTPS" aria-label="Image URL" value="${esc(b.url)}"><input data-field="alt" placeholder="Alternative text" aria-label="Alternative text" value="${esc(b.alt)}"><input data-field="caption" placeholder="Image caption" aria-label="Image caption" value="${esc(b.caption)}">${canUpload() ? `<button type="button" class="button small" data-block-media="${i}">${icon("media")} Choose from library</button>` : ""}` : `${b.type === "heading" ? `<select data-field="level" aria-label="Heading level"><option value="2">Heading 2</option><option value="3" ${b.level === 3 ? "selected" : ""}>Heading 3</option></select>` : ""}<textarea data-field="content" aria-label="${blockNames[b.type]}" placeholder="${b.type === "list" ? "One item per line…" : b.type === "html" ? "HTML will be sanitized when saved…" : "Start writing…"}">${esc(b.content)}</textarea>${b.type === "button" ? `<input data-field="url" aria-label="Button URL" value="${esc(b.url)}" placeholder="https://…">` : ""}`}</div>`,
-    )
-    .join("");
-  for (const action of ["up", "down", "remove"])
-    $$(`[data-${action}]`).forEach((el) =>
-      el.addEventListener("click", () => {
-        const all = readEditor().blocks,
-          i = Number(el.dataset[action]);
-        if (action === "remove") all.splice(i, 1);
-        else {
-          const to = i + (action === "up" ? -1 : 1);
-          if (to < 0 || to >= all.length) return;
-          [all[i], all[to]] = [all[to], all[i]];
-        }
-        paintBlocks(all);
-        dirty = true;
-      }),
-    );
-  $$("[data-block-media]").forEach((el) =>
-    bind(`[data-block-media="${el.dataset.blockMedia}"]`, "click", () =>
-      pickMedia((m) => {
-        const blocks = readEditor().blocks;
-        blocks[+el.dataset.blockMedia] = {
-          ...blocks[+el.dataset.blockMedia],
-          url: "/media/" + m.id,
-          alt: m.alt,
-          caption: m.caption,
-        };
-        paintBlocks(blocks);
-        dirty = true;
-      }),
-    ),
-  );
+  if (builder) builder.set(blocks);
+  else {
+    const documentPanel = document.createElement("div");
+    documentPanel.className = "pb-document-content";
+    documentPanel.append($("#builder-document-meta"), $(".editor-sidebar"));
+    builder = createBuilder($("#blocks"), blocks, {
+      documentPanel,
+      api,
+      toast,
+      openModal,
+      pickMedia,
+      canUpload: canUpload(),
+      user,
+      onChange: builderChanged,
+      getLayout: () => $("#post-form").elements.layout.value,
+      setLayout: (value) => {
+        $("#post-form").elements.layout.value = value;
+      },
+    });
+  }
   updateSEO();
 }
 async function renderEditor(id, type = "post") {
@@ -437,17 +411,21 @@ async function renderEditor(id, type = "post") {
     api("terms"),
   ]);
   editor = result;
+  builder?.dispose();
+  builder = null;
   dirty = false;
   const p = result.post;
   $("#workspace").innerHTML =
     heading(
       id
         ? "Edit " + (p.type === "page" ? "page" : "post")
-        : "A new story starts here.",
-      "Bring your ideas together, one block at a time.",
-      `<span id="save-status" class="muted">${id ? "Saved" : "New draft"}</span>${id ? `<a class="button" href="/${esc(p.slug)}?preview=1" target="_blank" rel="noopener">${icon("eye")} Preview</a>` : ""}${button("AI writing", "ai-writing", "", "spark")}${button("Save", "save-post", "primary", "check")}`,
+        : p.type === "page"
+          ? "New page"
+          : "New post",
+      "Coordiation Page Builder",
+      `<a class="button" href="#${p.type === "page" ? "pages" : "posts"}" aria-label="Back to ${p.type === "page" ? "pages" : "posts"}">${icon("back")} Back</a><span id="save-status" class="muted">${id ? "Saved" : "New draft"}</span>${id ? `<a class="button" href="/${esc(p.slug)}?preview=1" target="_blank" rel="noopener">${icon("eye")} Preview</a>` : ""}${button("AI writing", "ai-writing", "", "spark")}${button("Save", "save-post", "primary", "check")}`,
     ) +
-    `${result.autosave ? '<div class="inline-alert">An unsaved autosave is available. <button class="button small" data-action="recover-autosave">Recover autosave</button></div>' : ""}<form id="post-form"><div class="editor-layout"><div class="editor-canvas"><label class="sr-only" for="post-title">Title</label><input name="title" id="post-title" class="title-input" placeholder="Add a title…" value="${esc(p.title)}" required maxlength="250"><label class="sr-only" for="post-excerpt">Excerpt</label><textarea id="post-excerpt" name="excerpt" class="excerpt-input" placeholder="A short introduction for your readers…">${esc(p.excerpt)}</textarea><div id="blocks" class="block-list"></div><button type="button" class="block-add" data-action="add-block">${icon("plus")} Add a block</button></div><aside class="editor-sidebar"><section class="panel seo-panel"><div class="panel-head"><h2>SEO meter</h2>${icon("spark")}</div><div class="panel-body" id="seo-analysis"></div><div class="panel-body"><label>SEO title<input name="seo_title" value="${esc(p.seo?.title || "")}" maxlength="120" placeholder="Use the article title"></label><label>Meta description<textarea name="seo_description" maxlength="320" placeholder="Use the excerpt">${esc(p.seo?.description || "")}</textarea></label><label>Canonical URL<input name="seo_canonical" value="${esc(p.seo?.canonical || "")}" type="url" placeholder="Automatic URL"></label><label class="check-label"><input type="checkbox" name="seo_noindex" ${p.seo?.noindex ? "checked" : ""}>Exclude from search indexing</label><p class="field-hint">The site name is added to the SEO title. Leave canonical empty unless this content belongs at another URL.</p></div></section><section class="panel"><div class="panel-head"><h2>Publishing</h2>${icon("settings")}</div><div class="panel-body"><label>Status<select name="status">${Object.entries(
+    `${result.autosave ? '<div class="inline-alert">An unsaved autosave is available. <button class="button small" data-action="recover-autosave">Recover autosave</button></div>' : ""}<form id="post-form"><div class="editor-layout"><div class="editor-canvas"><div id="builder-document-meta"><label for="post-title">Title</label><input name="title" id="post-title" class="builder-title-input" placeholder="Add a title…" value="${esc(p.title)}" required maxlength="250"><label for="post-excerpt">Excerpt</label><textarea id="post-excerpt" name="excerpt" class="builder-excerpt-input" placeholder="A short introduction for your readers…">${esc(p.excerpt)}</textarea><div class="pb-layout-setting"><label for="page-layout">Page layout</label><select id="page-layout" name="layout"><option value="theme" ${!p.layout || p.layout === "theme" ? "selected" : ""}>Theme default</option><option value="wide" ${p.layout === "wide" ? "selected" : ""}>Wide content (keep theme header)</option><option value="canvas" ${p.layout === "canvas" ? "selected" : ""}>Blank canvas (content only)</option></select><p class="field-hint">Blank canvas removes the theme header and article title. Add a Heading 1 block for your page title.</p></div></div><div id="blocks"></div></div><aside class="editor-sidebar"><section class="panel seo-panel"><div class="panel-head"><h2>SEO meter</h2>${icon("spark")}</div><div class="panel-body" id="seo-analysis"></div><div class="panel-body"><label>SEO title<input name="seo_title" value="${esc(p.seo?.title || "")}" maxlength="120" placeholder="Use the article title"></label><label>Meta description<textarea name="seo_description" maxlength="320" placeholder="Use the excerpt">${esc(p.seo?.description || "")}</textarea></label><label>Canonical URL<input name="seo_canonical" value="${esc(p.seo?.canonical || "")}" type="url" placeholder="Automatic URL"></label><label class="check-label"><input type="checkbox" name="seo_noindex" ${p.seo?.noindex ? "checked" : ""}>Exclude from search indexing</label><p class="field-hint">The site name is added to the SEO title. Leave canonical empty unless this content belongs at another URL.</p></div></section><section class="panel"><div class="panel-head"><h2>Publishing</h2>${icon("settings")}</div><div class="panel-body"><label>Status<select name="status">${Object.entries(
       statusNames,
     )
       .filter(
@@ -521,26 +499,7 @@ async function renderEditor(id, type = "post") {
       actionButton.disabled = false;
     }
   });
-  bind("[data-action=add-block]", "click", () => {
-    const d = openModal(
-      "Add a block",
-      `<div class="block-picker">${Object.entries(blockNames)
-        .map(
-          ([key, name]) =>
-            `<button data-block="${key}">${icon(key === "image" ? "media" : key)}${name}</button>`,
-        )
-        .join("")}</div>`,
-    );
-    $$("[data-block]", d).forEach((el) =>
-      el.addEventListener("click", () => {
-        const blocks = readEditor().blocks;
-        blocks.push({ type: el.dataset.block, content: "" });
-        paintBlocks(blocks);
-        dirty = true;
-        d.close();
-      }),
-    );
-  });
+  bind("[data-action=add-block]", "click", () => builder.add());
   bind("[data-action=pick-cover]", "click", () => {
     if (!canUpload())
       throw new Error("Your role cannot access the media library.");
@@ -587,6 +546,7 @@ async function renderEditor(id, type = "post") {
       "status",
       "visibility",
       "featured_id",
+      "layout",
     ])
       if (form.elements[k]) form.elements[k].value = saved[k] || "";
     for (const key of ["title", "description", "canonical"])
@@ -1164,6 +1124,8 @@ async function route() {
   disposeStatistics();
   clearTimeout(autosaveTimer);
   editor = null;
+  builder?.dispose();
+  builder = null;
   dirty = false;
   $("#sidebar").classList.remove("open");
   const [name = "dashboard", id] = (

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add the native Posts/Pages visual builder with docked Insert/Layers and Content/Style/Page panels, responsive preview and zoom.
+- Add nested sections, responsive design tokens, content layouts, undo/redo, and reusable template import/export with permissions and version checks.
+- Preserve nested content in autosaves, revisions, SEO analysis, descriptions, reading time, and AI input.
+
+
 ## 0.2.0 — 2026-09-08
 
 This release brings the current Statistics features to the npm distribution.
